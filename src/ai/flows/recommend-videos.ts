@@ -19,7 +19,7 @@ export type RecommendVideosInput = z.infer<typeof RecommendVideosInputSchema>;
 
 const VideoRecommendationSchema = z.object({
   title: z.string().describe('The title of the video.'),
-  thumbnail: z.string().describe('The URL of the video thumbnail.'),
+  thumbnail: z.string().describe('The URL of the YouTube video thumbnail (hqdefault.jpg).'),
   link: z.string().describe('The URL of the video.'),
 });
 
@@ -38,7 +38,7 @@ const prompt = ai.definePrompt({
 
 Summary: {{{documentSummary}}}
 
-Return a list of video recommendations, including the title, thumbnail, and link for each video.`,
+Return a list of video recommendations, including the title, a valid i.ytimg.com thumbnail link, and the link for each video.`,
 });
 
 const recommendVideosFlow = ai.defineFlow(

@@ -20,7 +20,8 @@ import {
   LogOut,
   ChevronDown,
   FileUp,
-  HelpCircle
+  HelpCircle,
+  Newspaper
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -66,6 +67,14 @@ export default function DashboardLayout({
                   <Link href="/dashboard/upload">
                     <FileUp />
                     Upload Material
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/dashboard/summary" asChild>
+                  <Link href="/dashboard/summary">
+                    <Newspaper />
+                    Summary
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

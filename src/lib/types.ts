@@ -18,3 +18,7 @@ export interface QuizQuestion {
 export interface Quiz {
   questions: QuizQuestion[];
 }
+
+export interface DocumentSummary {
+  summary: string;
+}

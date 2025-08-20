@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BrainCircuit, Video, BookCopy, ArrowRight, FileUp, HelpCircle } from 'lucide-react';
+import { BrainCircuit, Video, BookCopy, ArrowRight, FileUp, HelpCircle, Newspaper } from 'lucide-react';
 
 const modules = [
    {
@@ -16,6 +16,12 @@ const modules = [
     description: 'Upload your study material to get started.',
     href: '/dashboard/upload',
     icon: <FileUp className="h-8 w-8 text-primary" />,
+  },
+  {
+    title: 'Summarizer',
+    description: 'Get a concise summary of your document.',
+    href: '/dashboard/summary',
+    icon: <Newspaper className="h-8 w-8 text-primary" />,
   },
   {
     title: 'Flashcard Generator',
