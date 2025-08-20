@@ -52,17 +52,29 @@ export function Uploader() {
         toast({ variant: 'destructive', title: 'File too large', description: 'Please upload a file smaller than 5MB.' });
         return;
       }
-      if (file.type !== 'text/plain') {
-         toast({ variant: 'destructive', title: 'Invalid file type', description: 'Please upload a plain text (.txt) file.' });
+      
+      const allowedTypes = ['text/plain', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+         toast({ variant: 'destructive', title: 'Invalid file type', description: 'Please upload a .txt, .pdf, .doc, or .docx file.' });
          return;
       }
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result as string;
-        form.setValue('studyMaterial', text.slice(0, 10000));
-        handleSubmit({ studyMaterial: text.slice(0, 10000), file: null });
-      };
-      reader.readAsText(file);
+
+      if (file.type === 'text/plain') {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target?.result as string;
+          form.setValue('studyMaterial', text.slice(0, 10000));
+          handleSubmit({ studyMaterial: text.slice(0, 10000), file: null });
+        };
+        reader.readAsText(file);
+      } else {
+        toast({
+          title: 'File type not yet supported for parsing',
+          description: 'You can upload this file, but extracting text from it is not yet implemented. Only .txt is currently supported.',
+        });
+        // For now, we are not processing the file, but in future, you would handle it here.
+        // For example, you might upload it to a server for processing.
+      }
     }
   };
 
@@ -86,13 +98,13 @@ export function Uploader() {
         <CardDescription>Use one of the methods below. The content will be used to power the AI features.</CardDescription>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-         <Tabs defaultValue="paste" className="w-full">
+        <Tabs defaultValue="paste" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="paste">Paste Text</TabsTrigger>
-                <TabsTrigger value="upload">Upload .txt File</TabsTrigger>
+                <TabsTrigger value="upload">Upload File</TabsTrigger>
             </TabsList>
             <TabsContent value="paste">
+                <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pt-4">
                     <FormField
                         control={form.control}
@@ -125,6 +137,7 @@ export function Uploader() {
                         )}
                     </Button>
                     </form>
+                </Form>
             </TabsContent>
             <TabsContent value="upload">
                 <Card className="border-2 border-dashed bg-secondary/50 mt-4">
@@ -132,18 +145,22 @@ export function Uploader() {
                         <div className="flex flex-col items-center justify-center space-y-4 text-center">
                              <UploadCloud className="h-12 w-12 text-muted-foreground" />
                              <h3 className="text-lg font-semibold">Click to upload or drag and drop</h3>
-                             <p className="text-sm text-muted-foreground">Plain text file (.txt), up to 5MB</p>
-                             <FormField
-                                control={form.control}
-                                name="file"
-                                render={() => (
-                                    <FormItem>
-                                        <FormControl>
-                                            <Input type="file" className="hidden" id="file-upload" onChange={handleFileChange} accept=".txt" />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                             />
+                             <p className="text-sm text-muted-foreground">TXT, PDF, DOC, or DOCX, up to 5MB</p>
+                             <Form {...form}>
+                                 <form>
+                                     <FormField
+                                        control={form.control}
+                                        name="file"
+                                        render={() => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input type="file" className="hidden" id="file-upload" onChange={handleFileChange} accept=".txt,.pdf,.doc,.docx" />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                     />
+                                 </form>
+                             </Form>
                               <Button asChild>
                                 <Label htmlFor="file-upload" className="cursor-pointer">
                                    Select File
@@ -154,7 +171,6 @@ export function Uploader() {
                 </Card>
             </TabsContent>
         </Tabs>
-        </Form>
       </CardContent>
     </Card>
   );
