@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useForm, FormProvider } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import mammoth from 'mammoth';
-import pdf from 'pdf-parse/lib/pdf-parse';
 
 import {
   Form,
@@ -36,6 +34,7 @@ const formSchema = z.object({
 
 export function Uploader() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const { setStudyMaterial } = useContext(StudyMaterialContext);
   const router = useRouter();
   const { toast } = useToast();
@@ -47,59 +46,55 @@ export function Uploader() {
       file: null,
     },
   });
-
-  const processAndSubmitText = (text: string) => {
-    const truncatedText = text.slice(0, 10000);
-    form.setValue('studyMaterial', truncatedText);
-    handleSubmit({ studyMaterial: truncatedText, file: null });
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    
+    setIsUploading(true);
 
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
       toast({ variant: 'destructive', title: 'File too large', description: 'Please upload a file smaller than 5MB.' });
+      setIsUploading(false);
       return;
     }
     
     const allowedTypes = ['text/plain', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!allowedTypes.includes(file.type)) {
        toast({ variant: 'destructive', title: 'Invalid file type', description: 'Please upload a .txt, .pdf, or .docx file.' });
+       setIsUploading(false);
        return;
     }
-
-    const reader = new FileReader();
-
-    reader.onload = async (e) => {
-        if (!e.target?.result) return;
-
-        try {
-            let text = '';
-            if (file.type === 'text/plain') {
-                text = e.target.result as string;
-            } else if (file.type === 'application/pdf') {
-                const data = await pdf(e.target.result as ArrayBuffer);
-                text = data.text;
-            } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-                const result = await mammoth.extractRawText({ arrayBuffer: e.target.result as ArrayBuffer });
-                text = result.value;
-            }
-            processAndSubmitText(text);
-        } catch (error) {
-            console.error('Error parsing file:', error);
-            toast({ variant: 'destructive', title: 'File Read Error', description: 'Could not parse the uploaded file. It might be corrupted or in an unsupported format.' });
-        }
-    };
-
-    reader.onerror = () => {
-        toast({ variant: 'destructive', title: 'File Read Error', description: 'Could not read the uploaded file.' });
-    };
     
-    if (file.type === 'text/plain') {
-        reader.readAsText(file);
-    } else {
-        reader.readAsArrayBuffer(file);
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'File processing failed.');
+        }
+
+        const data = await response.json();
+        const truncatedText = data.text.slice(0, 10000);
+        setStudyMaterial(truncatedText);
+        toast({
+          title: 'Success!',
+          description: 'Your study material has been loaded. Redirecting...',
+        });
+        router.push('/dashboard/flashcards');
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+        console.error('Error uploading file:', error);
+        toast({ variant: 'destructive', title: 'Upload Error', description: errorMessage });
+    } finally {
+        setIsUploading(false);
     }
   };
 
@@ -172,26 +167,25 @@ export function Uploader() {
                              <UploadCloud className="h-12 w-12 text-muted-foreground" />
                              <h3 className="text-lg font-semibold">Click to upload or drag and drop</h3>
                              <p className="text-sm text-muted-foreground">TXT, PDF, or DOCX, up to 5MB</p>
-                             <FormProvider {...form}>
-                                 <form>
-                                     <FormField
-                                        control={form.control}
-                                        name="file"
-                                        render={() => (
-                                            <FormItem>
-                                                <FormControl>
-                                                    <Input type="file" className="hidden" id="file-upload" onChange={handleFileChange} accept=".txt,.pdf,.docx" />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                     />
-                                 </form>
-                             </FormProvider>
-                              <Button asChild>
-                                <Label htmlFor="file-upload" className="cursor-pointer">
-                                   Select File
-                                </Label>
-                             </Button>
+                            <Input 
+                                type="file" 
+                                className="hidden" 
+                                id="file-upload" 
+                                onChange={handleFileChange} 
+                                accept=".txt,.pdf,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
+                                disabled={isUploading}
+                            />
+                            <Button asChild disabled={isUploading}>
+                              <Label htmlFor="file-upload" className="cursor-pointer">
+                                {isUploading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Processing...
+                                    </>
+                                ) : 'Select File'
+                                }
+                              </Label>
+                           </Button>
                         </div>
                     </CardContent>
                 </Card>
