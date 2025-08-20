@@ -1,21 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useState, useContext, useEffect } from 'react';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, Wand2, Lightbulb } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -28,31 +21,27 @@ import {
 import { FlippableCard } from './flippable-card';
 import { type Flashcard } from '@/lib/types';
 import { generateFlashcards } from '@/ai/flows/generate-flashcards';
-
-const formSchema = z.object({
-  studyMaterial: z
-    .string()
-    .min(50, { message: 'Please provide at least 50 characters of study material.' })
-    .max(5000, { message: 'Study material cannot exceed 5000 characters.' }),
-});
+import { StudyMaterialContext } from '@/contexts/study-material-context';
 
 export function FlashcardGenerator() {
   const [isLoading, setIsLoading] = useState(false);
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
+  const { studyMaterial } = useContext(StudyMaterialContext);
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      studyMaterial: '',
-    },
-  });
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const handleGenerate = async () => {
+    if (!studyMaterial) {
+      toast({
+        variant: 'destructive',
+        title: 'No study material found.',
+        description: 'Please upload study material first.',
+      });
+      return;
+    }
     setIsLoading(true);
     setFlashcards([]);
     try {
-      const result = await generateFlashcards(values);
+      const result = await generateFlashcards({ studyMaterial });
       if (result.flashcards && result.flashcards.length > 0) {
         setFlashcards(result.flashcards);
         toast({
@@ -76,84 +65,75 @@ export function FlashcardGenerator() {
     } finally {
       setIsLoading(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    // Automatically generate flashcards when component mounts with study material
+    if (studyMaterial) {
+      handleGenerate();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studyMaterial]);
 
   return (
     <div className="space-y-8">
-      <Card>
-        <CardContent className="p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="studyMaterial"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-lg font-semibold">Study Material</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Paste your notes, an article, or any text here..."
-                        className="min-h-[200px] text-base"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Provide the text you want to turn into flashcards.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" disabled={isLoading} size="lg">
+      {isLoading && (
+        <div className="text-center p-10">
+          <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+          <p className="mt-4 text-muted-foreground">The AI is thinking... this may take a moment.</p>
+        </div>
+      )}
+
+      {flashcards.length > 0 && !isLoading && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Generated Flashcards</CardTitle>
+              <CardDescription>Click a card to flip it. Use the arrows to navigate.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Carousel className="w-full" opts={{ align: 'start', loop: true }}>
+                <CarouselContent>
+                  {flashcards.map((card, index) => (
+                    <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                      <div className="p-1">
+                        <FlippableCard frontContent={card.front} backContent={card.back} />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="ml-12" />
+                <CarouselNext className="mr-12" />
+              </Carousel>
+            </CardContent>
+          </Card>
+          <div className='text-center'>
+            <Button onClick={handleGenerate} disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
+                    Regenerating...
                   </>
                 ) : (
                   <>
                     <Wand2 className="mr-2 h-4 w-4" />
-                    Generate Flashcards
+                    Regenerate
                   </>
                 )}
               </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-
-      {isLoading && (
-         <div className="text-center p-10">
-            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-            <p className="mt-4 text-muted-foreground">The AI is thinking... this may take a moment.</p>
-        </div>
-      )}
-
-      {flashcards.length > 0 && (
-        <Carousel className="w-full" opts={{ align: 'start', loop: true }}>
-          <CarouselContent>
-            {flashcards.map((card, index) => (
-              <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                <div className="p-1">
-                  <FlippableCard frontContent={card.front} backContent={card.back} />
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="ml-12"/>
-          <CarouselNext className="mr-12"/>
-        </Carousel>
+          </div>
+        </>
       )}
 
       {!isLoading && flashcards.length === 0 && (
         <Card className="text-center p-10 bg-secondary/50 border-dashed">
-            <div className="flex justify-center mb-4">
-              <div className="bg-primary/10 p-4 rounded-full">
-                <Lightbulb className="h-8 w-8 text-primary" />
-              </div>
+          <div className="flex justify-center mb-4">
+            <div className="bg-primary/10 p-4 rounded-full">
+              <Lightbulb className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold font-headline">Your Flashcards Will Appear Here</h3>
-            <p className="text-muted-foreground mt-2">Enter some study material above to get started.</p>
+          </div>
+          <h3 className="text-xl font-semibold font-headline">Your Flashcards Will Appear Here</h3>
+          <p className="text-muted-foreground mt-2">Generating flashcards from your uploaded material.</p>
         </Card>
       )}
     </div>

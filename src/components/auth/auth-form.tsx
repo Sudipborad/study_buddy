@@ -51,12 +51,19 @@ export function AuthForm({ mode }: AuthFormProps) {
     setIsLoading(false);
 
     // In a real app, you would handle success/error from your API.
-    // For now, we'll just simulate success and redirect.
-    toast({
-      title: mode === 'login' ? 'Login Successful' : 'Registration Successful',
-      description: "You're being redirected to your dashboard.",
-    });
-    router.push('/dashboard');
+    if (mode === 'login') {
+      toast({
+        title: 'Login Successful',
+        description: "You're being redirected to your dashboard.",
+      });
+      router.push('/dashboard');
+    } else {
+       toast({
+        title: 'Registration Successful',
+        description: "Please log in to continue.",
+      });
+      router.push('/login');
+    }
   };
 
   return (

@@ -8,14 +8,26 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BrainCircuit, Video, BookCopy, ArrowRight } from 'lucide-react';
+import { BrainCircuit, Video, BookCopy, ArrowRight, FileUp, HelpCircle } from 'lucide-react';
 
 const modules = [
+   {
+    title: 'Upload Material',
+    description: 'Upload your study material to get started.',
+    href: '/dashboard/upload',
+    icon: <FileUp className="h-8 w-8 text-primary" />,
+  },
   {
     title: 'Flashcard Generator',
     description: 'Create flashcards from your study materials.',
     href: '/dashboard/flashcards',
     icon: <BrainCircuit className="h-8 w-8 text-primary" />,
+  },
+  {
+    title: 'Quiz Generator',
+    description: 'Test your knowledge with an AI-generated quiz.',
+    href: '/dashboard/quiz',
+    icon: <HelpCircle className="h-8 w-8 text-primary" />,
   },
   {
     title: 'Video Recommender',

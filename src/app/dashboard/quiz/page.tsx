@@ -3,13 +3,13 @@
 import { useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { StudyMaterialContext } from '@/contexts/study-material-context';
-import { FlashcardGenerator } from "@/components/dashboard/flashcard-generator";
+import { QuizGenerator } from "@/components/dashboard/quiz-generator";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileUp } from 'lucide-react';
 import Link from 'next/link';
 
-export default function FlashcardsPage() {
+export default function QuizPage() {
     const { studyMaterial } = useContext(StudyMaterialContext);
     const router = useRouter();
 
@@ -25,7 +25,7 @@ export default function FlashcardsPage() {
                 <CardHeader>
                     <CardTitle className="font-headline">No Study Material Found</CardTitle>
                     <CardDescription>
-                        Please upload your study material first to generate flashcards.
+                        Please upload your study material first to generate a quiz.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -39,16 +39,15 @@ export default function FlashcardsPage() {
             </Card>
         );
     }
-
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-bold font-headline">Flashcard Generator</h1>
+                <h1 className="text-3xl font-bold font-headline">Quiz Generator</h1>
                 <p className="text-muted-foreground">
-                    Let AI create your study sets instantly from your uploaded material.
+                    Test your knowledge with a quiz generated from your study material.
                 </p>
             </div>
-            <FlashcardGenerator />
+            <QuizGenerator />
         </div>
     )
 }
