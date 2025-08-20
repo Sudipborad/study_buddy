@@ -2,9 +2,12 @@
 
 import { useState, useContext } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import mammoth from 'mammoth';
+import pdf from 'pdf-parse/lib/pdf-parse';
+
 import {
   Form,
   FormControl,
@@ -45,38 +48,61 @@ export function Uploader() {
     },
   });
 
+  const processAndSubmitText = (text: string) => {
+    const truncatedText = text.slice(0, 10000);
+    form.setValue('studyMaterial', truncatedText);
+    handleSubmit({ studyMaterial: truncatedText, file: null });
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast({ variant: 'destructive', title: 'File too large', description: 'Please upload a file smaller than 5MB.' });
-        return;
-      }
-      
-      const allowedTypes = ['text/plain', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-      if (!allowedTypes.includes(file.type)) {
-         toast({ variant: 'destructive', title: 'Invalid file type', description: 'Please upload a .txt, .pdf, .doc, or .docx file.' });
-         return;
-      }
+    if (!file) return;
 
-      if (file.type === 'text/plain') {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const text = e.target?.result as string;
-          form.setValue('studyMaterial', text.slice(0, 10000));
-          handleSubmit({ studyMaterial: text.slice(0, 10000), file: null });
-        };
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast({ variant: 'destructive', title: 'File too large', description: 'Please upload a file smaller than 5MB.' });
+      return;
+    }
+    
+    const allowedTypes = ['text/plain', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(file.type)) {
+       toast({ variant: 'destructive', title: 'Invalid file type', description: 'Please upload a .txt, .pdf, or .docx file.' });
+       return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+        if (!e.target?.result) return;
+
+        try {
+            let text = '';
+            if (file.type === 'text/plain') {
+                text = e.target.result as string;
+            } else if (file.type === 'application/pdf') {
+                const data = await pdf(e.target.result as ArrayBuffer);
+                text = data.text;
+            } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                const result = await mammoth.extractRawText({ arrayBuffer: e.target.result as ArrayBuffer });
+                text = result.value;
+            }
+            processAndSubmitText(text);
+        } catch (error) {
+            console.error('Error parsing file:', error);
+            toast({ variant: 'destructive', title: 'File Read Error', description: 'Could not parse the uploaded file. It might be corrupted or in an unsupported format.' });
+        }
+    };
+
+    reader.onerror = () => {
+        toast({ variant: 'destructive', title: 'File Read Error', description: 'Could not read the uploaded file.' });
+    };
+    
+    if (file.type === 'text/plain') {
         reader.readAsText(file);
-      } else {
-        toast({
-          title: 'File type not yet supported for parsing',
-          description: 'You can upload this file, but extracting text from it is not yet implemented. Only .txt is currently supported.',
-        });
-        // For now, we are not processing the file, but in future, you would handle it here.
-        // For example, you might upload it to a server for processing.
-      }
+    } else {
+        reader.readAsArrayBuffer(file);
     }
   };
+
 
   async function handleSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -104,7 +130,7 @@ export function Uploader() {
                 <TabsTrigger value="upload">Upload File</TabsTrigger>
             </TabsList>
             <TabsContent value="paste">
-                <Form {...form}>
+                <FormProvider {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pt-4">
                     <FormField
                         control={form.control}
@@ -137,7 +163,7 @@ export function Uploader() {
                         )}
                     </Button>
                     </form>
-                </Form>
+                </FormProvider>
             </TabsContent>
             <TabsContent value="upload">
                 <Card className="border-2 border-dashed bg-secondary/50 mt-4">
@@ -145,8 +171,8 @@ export function Uploader() {
                         <div className="flex flex-col items-center justify-center space-y-4 text-center">
                              <UploadCloud className="h-12 w-12 text-muted-foreground" />
                              <h3 className="text-lg font-semibold">Click to upload or drag and drop</h3>
-                             <p className="text-sm text-muted-foreground">TXT, PDF, DOC, or DOCX, up to 5MB</p>
-                             <Form {...form}>
+                             <p className="text-sm text-muted-foreground">TXT, PDF, or DOCX, up to 5MB</p>
+                             <FormProvider {...form}>
                                  <form>
                                      <FormField
                                         control={form.control}
@@ -154,13 +180,13 @@ export function Uploader() {
                                         render={() => (
                                             <FormItem>
                                                 <FormControl>
-                                                    <Input type="file" className="hidden" id="file-upload" onChange={handleFileChange} accept=".txt,.pdf,.doc,.docx" />
+                                                    <Input type="file" className="hidden" id="file-upload" onChange={handleFileChange} accept=".txt,.pdf,.docx" />
                                                 </FormControl>
                                             </FormItem>
                                         )}
                                      />
                                  </form>
-                             </Form>
+                             </FormProvider>
                               <Button asChild>
                                 <Label htmlFor="file-upload" className="cursor-pointer">
                                    Select File
