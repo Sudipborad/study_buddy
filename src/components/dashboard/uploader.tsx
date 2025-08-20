@@ -86,13 +86,13 @@ export function Uploader() {
         <CardDescription>Use one of the methods below. The content will be used to power the AI features.</CardDescription>
       </CardHeader>
       <CardContent>
+        <Form {...form}>
          <Tabs defaultValue="paste" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="paste">Paste Text</TabsTrigger>
                 <TabsTrigger value="upload">Upload .txt File</TabsTrigger>
             </TabsList>
             <TabsContent value="paste">
-                <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pt-4">
                     <FormField
                         control={form.control}
@@ -125,7 +125,6 @@ export function Uploader() {
                         )}
                     </Button>
                     </form>
-                </Form>
             </TabsContent>
             <TabsContent value="upload">
                 <Card className="border-2 border-dashed bg-secondary/50 mt-4">
@@ -134,9 +133,17 @@ export function Uploader() {
                              <UploadCloud className="h-12 w-12 text-muted-foreground" />
                              <h3 className="text-lg font-semibold">Click to upload or drag and drop</h3>
                              <p className="text-sm text-muted-foreground">Plain text file (.txt), up to 5MB</p>
-                             <FormControl>
-                                <Input type="file" className="hidden" id="file-upload" onChange={handleFileChange} accept=".txt" />
-                             </FormControl>
+                             <FormField
+                                control={form.control}
+                                name="file"
+                                render={() => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <Input type="file" className="hidden" id="file-upload" onChange={handleFileChange} accept=".txt" />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                             />
                               <Button asChild>
                                 <Label htmlFor="file-upload" className="cursor-pointer">
                                    Select File
@@ -147,6 +154,7 @@ export function Uploader() {
                 </Card>
             </TabsContent>
         </Tabs>
+        </Form>
       </CardContent>
     </Card>
   );
