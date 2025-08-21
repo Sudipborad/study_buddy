@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/auth-context';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +36,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { signUp, signIn } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,23 +48,30 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsLoading(false);
-
-    // In a real app, you would handle success/error from your API.
-    if (mode === 'login') {
+    try {
+      if (mode === 'register') {
+        await signUp(values.email, values.password);
+        toast({
+          title: 'Registration Successful',
+          description: "Please log in to continue.",
+        });
+        router.push('/login');
+      } else {
+        await signIn(values.email, values.password);
+        toast({
+          title: 'Login Successful',
+          description: "You're being redirected to your dashboard.",
+        });
+        router.push('/dashboard');
+      }
+    } catch (error: any) {
       toast({
-        title: 'Login Successful',
-        description: "You're being redirected to your dashboard.",
+        variant: 'destructive',
+        title: 'Authentication Failed',
+        description: error.message || 'An unexpected error occurred. Please try again.',
       });
-      router.push('/dashboard');
-    } else {
-       toast({
-        title: 'Registration Successful',
-        description: "Please log in to continue.",
-      });
-      router.push('/login');
+    } finally {
+      setIsLoading(false);
     }
   };
 

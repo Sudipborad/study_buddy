@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useForm, FormProvider } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAuth } from '@/contexts/auth-context';
+import { addMaterial } from '@/lib/firebase/firestore';
 
 import {
   Form,
@@ -38,14 +40,36 @@ export function Uploader() {
   const { setStudyMaterial } = useContext(StudyMaterialContext);
   const router = useRouter();
   const { toast } = useToast();
-
-  const form = useForm<z.infer<typeof formSchema>>({
+  const { user } = useAuth();
+  
+  const formMethods = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       studyMaterial: '',
       file: null,
     },
   });
+
+  const saveAndRedirect = async (content: string, title: string, type: string) => {
+    if (user) {
+      try {
+        await addMaterial(user.uid, {
+          title: title,
+          content: content,
+          type: type,
+        });
+      } catch (error) {
+        console.error("Failed to save material:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not save your material to your account.' });
+      }
+    }
+    setStudyMaterial(content);
+    toast({
+      title: 'Success!',
+      description: 'Your study material has been loaded. Redirecting...',
+    });
+    router.push('/dashboard/flashcards');
+  }
   
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -59,7 +83,7 @@ export function Uploader() {
       return;
     }
     
-    const allowedTypes = ['text/plain', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const allowedTypes = ['text/plain', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
     if (!allowedTypes.includes(file.type)) {
        toast({ variant: 'destructive', title: 'Invalid file type', description: 'Please upload a .txt, .pdf, or .docx file.' });
        setIsUploading(false);
@@ -82,12 +106,7 @@ export function Uploader() {
 
         const data = await response.json();
         const truncatedText = data.text.slice(0, 10000);
-        setStudyMaterial(truncatedText);
-        toast({
-          title: 'Success!',
-          description: 'Your study material has been loaded. Redirecting...',
-        });
-        router.push('/dashboard/flashcards');
+        await saveAndRedirect(truncatedText, file.name, "File Upload");
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
@@ -101,14 +120,8 @@ export function Uploader() {
 
   async function handleSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    // Simulate processing
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setStudyMaterial(values.studyMaterial);
-    toast({
-      title: 'Success!',
-      description: 'Your study material has been loaded. Redirecting you to the flashcard generator...',
-    });
-    router.push('/dashboard/flashcards');
+    const title = values.studyMaterial.substring(0, 30) + '...';
+    await saveAndRedirect(values.studyMaterial, title, "Pasted Text");
     setIsLoading(false);
   }
 
@@ -125,10 +138,10 @@ export function Uploader() {
                 <TabsTrigger value="upload">Upload File</TabsTrigger>
             </TabsList>
             <TabsContent value="paste">
-                <FormProvider {...form}>
-                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pt-4">
+                <FormProvider {...formMethods}>
+                    <form onSubmit={formMethods.handleSubmit(handleSubmit)} className="space-y-6 pt-4">
                     <FormField
-                        control={form.control}
+                        control={formMethods.control}
                         name="studyMaterial"
                         render={({ field }) => (
                         <FormItem>
