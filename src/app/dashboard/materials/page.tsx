@@ -145,9 +145,8 @@ export default function MaterialsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>View</DropdownMenuItem>
                           <AlertDialogTrigger asChild>
-                             <DropdownMenuItem className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
+                             <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive" onSelect={(e) => e.preventDefault()}>
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
                             </DropdownMenuItem>
