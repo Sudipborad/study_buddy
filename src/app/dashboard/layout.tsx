@@ -25,9 +25,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { StudyMaterialProvider } from '@/contexts/study-material-context';
-import { AuthProvider, useAuth } from '@/contexts/auth-context';
-import { DashboardUser } from '@/components/dashboard/dashboard-user';
-import { AuthForm } from '@/components/auth/auth-form';
 
 function DashboardNav() {
   return (
@@ -102,7 +99,7 @@ function DashboardNav() {
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter className="p-2">
-            <DashboardUser />
+            
           </SidebarFooter>
         </Sidebar>
       </SidebarProvider>
@@ -110,16 +107,6 @@ function DashboardNav() {
 }
 
 function MainContent({ children }: { children: React.ReactNode }) {
-    const { user } = useAuth();
-    
-    if (!user) {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-secondary/30">
-                 <AuthForm mode="login" />
-            </div>
-        )
-    }
-
     return (
         <>
             <DashboardNav />
@@ -128,7 +115,7 @@ function MainContent({ children }: { children: React.ReactNode }) {
                 <SidebarTrigger className="md:hidden" />
                 <div className="flex items-center gap-4 ml-auto">
                     <p className="font-semibold text-lg font-headline hidden md:block">
-                    <DashboardUser showGreeting />
+                      Welcome!
                     </p>
                 </div>
                 </header>
@@ -144,10 +131,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AuthProvider>
       <StudyMaterialProvider>
         <MainContent>{children}</MainContent>
       </StudyMaterialProvider>
-    </AuthProvider>
   );
 }

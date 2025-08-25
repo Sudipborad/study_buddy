@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useForm, FormProvider } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAuth } from '@/contexts/auth-context';
-import { addMaterial } from '@/lib/firebase/firestore';
 
 import {
   Form,
@@ -40,7 +38,6 @@ export function Uploader() {
   const { setStudyMaterial } = useContext(StudyMaterialContext);
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useAuth();
   
   const formMethods = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,25 +47,13 @@ export function Uploader() {
     },
   });
 
-  const saveAndRedirect = async (content: string, title: string, type: string) => {
-    if (user) {
-      try {
-        await addMaterial(user.uid, {
-          title: title,
-          content: content,
-          type: type,
-        });
-      } catch (error) {
-        console.error("Failed to save material:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not save your material to your account.' });
-      }
-    }
+  const saveAndRedirect = async (content: string) => {
     setStudyMaterial(content);
     toast({
       title: 'Success!',
       description: 'Your study material has been loaded. Redirecting...',
     });
-    router.push('/dashboard/flashcards');
+    router.push('/dashboard/summary');
   }
   
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,7 +91,7 @@ export function Uploader() {
 
         const data = await response.json();
         const truncatedText = data.text.slice(0, 10000);
-        await saveAndRedirect(truncatedText, file.name, "File Upload");
+        await saveAndRedirect(truncatedText);
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
@@ -120,8 +105,7 @@ export function Uploader() {
 
   async function handleSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    const title = values.studyMaterial.substring(0, 30) + '...';
-    await saveAndRedirect(values.studyMaterial, title, "Pasted Text");
+    await saveAndRedirect(values.studyMaterial);
     setIsLoading(false);
   }
 

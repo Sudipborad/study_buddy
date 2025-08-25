@@ -2,18 +2,14 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/auth-context';
 import { Loader2 } from 'lucide-react';
 
 export default function HomePage() {
     const router = useRouter();
-    const { loading } = useAuth();
 
     useEffect(() => {
-        if (!loading) {
-            router.replace('/dashboard');
-        }
-    }, [loading, router]);
+        router.replace('/dashboard');
+    }, [router]);
 
     return (
         <div className="flex h-screen w-full items-center justify-center">
