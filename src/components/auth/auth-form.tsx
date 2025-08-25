@@ -18,7 +18,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '../icons';
@@ -28,12 +27,9 @@ const formSchema = z.object({
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
 });
 
-type AuthFormProps = {
-  mode: 'login' | 'register';
-};
-
-export function AuthForm({ mode }: AuthFormProps) {
+export function AuthForm({ mode: initialMode = 'login' }: { mode?: 'login' | 'register' }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [mode, setMode] = useState(initialMode);
   const router = useRouter();
   const { toast } = useToast();
   const { signUp, signIn } = useAuth();
@@ -55,7 +51,8 @@ export function AuthForm({ mode }: AuthFormProps) {
           title: 'Registration Successful',
           description: "Please log in to continue.",
         });
-        router.push('/login');
+        setMode('login');
+        form.reset();
       } else {
         await signIn(values.email, values.password);
         toast({
@@ -76,13 +73,12 @@ export function AuthForm({ mode }: AuthFormProps) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-secondary/30">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <Link href="/" className="flex items-center justify-center gap-2 font-bold text-xl mb-4">
-            <Logo className="h-6 w-6 text-primary" />
-            <span className="font-headline">Study Smarter</span>
-          </Link>
+            <div className="flex items-center justify-center gap-2 font-bold text-xl mb-4">
+                <Logo className="h-6 w-6 text-primary" />
+                <span className="font-headline">Study Smarter</span>
+            </div>
           <CardTitle className="font-headline text-2xl">
             {mode === 'login' ? 'Welcome Back' : 'Create an Account'}
           </CardTitle>
@@ -131,14 +127,13 @@ export function AuthForm({ mode }: AuthFormProps) {
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
             {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}
-            <Button variant="link" asChild className="p-1 text-accent hover:text-accent/80">
-              <Link href={mode === 'login' ? '/register' : '/login'}>
+            <Button variant="link" asChild className="p-1 text-accent hover:text-accent/80" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
+              <button type="button">
                 {mode === 'login' ? 'Register' : 'Log In'}
-              </Link>
+              </button>
             </Button>
           </p>
         </CardFooter>
       </Card>
-    </div>
   );
 }

@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronDown, LogOut } from "lucide-react";
-import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 
 interface DashboardUserProps {
@@ -29,7 +28,7 @@ export function DashboardUser({ showGreeting = false }: DashboardUserProps) {
         try {
             await logOut();
             toast({ title: "Logged Out", description: "You have been successfully logged out." });
-            router.push('/login');
+            router.push('/dashboard');
         } catch (error) {
             toast({ variant: "destructive", title: "Logout Failed", description: "Could not log you out. Please try again." });
         }

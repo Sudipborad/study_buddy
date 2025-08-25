@@ -1,3 +1,6 @@
+
+'use client';
+
 import {
   SidebarProvider,
   Sidebar,
@@ -11,37 +14,22 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/icons';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   LayoutDashboard,
   BrainCircuit,
   Video,
   BookCopy,
-  LogOut,
-  ChevronDown,
   FileUp,
   HelpCircle,
   Newspaper
 } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { StudyMaterialProvider } from '@/contexts/study-material-context';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import { DashboardUser } from '@/components/dashboard/dashboard-user';
+import { AuthForm } from '@/components/auth/auth-form';
 
 function DashboardNav() {
-  const { user, loading } = useAuth();
-  
-  if (loading) return null; // Or a loading spinner
-
   return (
       <SidebarProvider>
         <Sidebar>
@@ -121,6 +109,35 @@ function DashboardNav() {
   )
 }
 
+function MainContent({ children }: { children: React.ReactNode }) {
+    const { user } = useAuth();
+    
+    if (!user) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-secondary/30">
+                 <AuthForm mode="login" />
+            </div>
+        )
+    }
+
+    return (
+        <>
+            <DashboardNav />
+            <SidebarInset className="bg-secondary/30">
+                <header className="flex h-16 items-center border-b bg-background/80 px-6 backdrop-blur-sm md:justify-end">
+                <SidebarTrigger className="md:hidden" />
+                <div className="flex items-center gap-4 ml-auto">
+                    <p className="font-semibold text-lg font-headline hidden md:block">
+                    <DashboardUser showGreeting />
+                    </p>
+                </div>
+                </header>
+                <main className="flex-1 p-4 sm:p-6">{children}</main>
+            </SidebarInset>
+        </>
+    )
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -129,18 +146,7 @@ export default function DashboardLayout({
   return (
     <AuthProvider>
       <StudyMaterialProvider>
-        <DashboardNav />
-        <SidebarInset className="bg-secondary/30">
-            <header className="flex h-16 items-center border-b bg-background/80 px-6 backdrop-blur-sm md:justify-end">
-              <SidebarTrigger className="md:hidden" />
-              <div className="flex items-center gap-4 ml-auto">
-                <p className="font-semibold text-lg font-headline hidden md:block">
-                  <DashboardUser showGreeting />
-                </p>
-              </div>
-            </header>
-            <main className="flex-1 p-4 sm:p-6">{children}</main>
-          </SidebarInset>
+        <MainContent>{children}</MainContent>
       </StudyMaterialProvider>
     </AuthProvider>
   );

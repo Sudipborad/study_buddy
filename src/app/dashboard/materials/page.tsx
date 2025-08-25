@@ -27,7 +27,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from '@/contexts/auth-context';
-import { useRouter } from 'next/navigation';
 import { getMaterials, deleteMaterial } from '@/lib/firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
@@ -56,14 +55,7 @@ export default function MaterialsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, authLoading, router]);
 
   useEffect(() => {
     if (user) {
@@ -74,8 +66,11 @@ export default function MaterialsPage() {
         setIsLoading(false);
       };
       fetchMaterials();
+    } else if (!authLoading) {
+        setIsLoading(false);
+        setMaterials([]);
     }
-  }, [user]);
+  }, [user, authLoading]);
   
   const handleDelete = async (materialId: string) => {
     if (!user) return;
