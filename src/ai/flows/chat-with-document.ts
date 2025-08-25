@@ -42,7 +42,7 @@ Document Text:
 Question:
 {{{question}}}
 
-Based on the document, what is the answer to the question?
+Based only on the document text provided, what is the answer to the question?
 `,
 });
 
