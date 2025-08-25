@@ -28,7 +28,6 @@ import { StudyMaterialProvider } from '@/contexts/study-material-context';
 
 function DashboardNav() {
   return (
-      <SidebarProvider>
         <Sidebar>
           <SidebarHeader className="p-4">
             <div className="flex items-center gap-2">
@@ -102,7 +101,6 @@ function DashboardNav() {
             
           </SidebarFooter>
         </Sidebar>
-      </SidebarProvider>
   )
 }
 
@@ -132,7 +130,9 @@ export default function DashboardLayout({
 }) {
   return (
       <StudyMaterialProvider>
-        <MainContent>{children}</MainContent>
+        <SidebarProvider>
+          <MainContent>{children}</MainContent>
+        </SidebarProvider>
       </StudyMaterialProvider>
   );
 }
