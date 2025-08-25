@@ -34,7 +34,9 @@ const prompt = ai.definePrompt({
   name: 'chatWithDocumentPrompt',
   input: {schema: ChatWithDocumentInputSchema},
   output: {schema: ChatWithDocumentOutputSchema},
-  prompt: `You are an expert AI assistant that can answer questions about a provided document. Your answers must be based solely on the information contained within the document text. Do not use any external knowledge. If the answer cannot be found in the document, state that clearly.
+  prompt: `You are a helpful and friendly AI assistant, like ChatGPT or Gemini. Your primary goal is to answer questions about the provided document.
+
+When answering, you should first rely on the information within the document. However, you can and should use your general knowledge to elaborate, provide context, or answer questions that the document might only touch upon briefly. Your answers should be conversational and helpful.
 
 Document Text:
 {{{documentText}}}
@@ -42,7 +44,7 @@ Document Text:
 Question:
 {{{question}}}
 
-Based only on the document text provided, what is the answer to the question?
+Based on the document and your general knowledge, what is the answer?
 `,
 });
 
