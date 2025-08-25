@@ -22,3 +22,8 @@ export interface Quiz {
 export interface DocumentSummary {
   summary: string;
 }
+
+export interface ChatMessage {
+    role: 'user' | 'assistant';
+    content: string;
+}

@@ -18,10 +18,10 @@ import {
   LayoutDashboard,
   BrainCircuit,
   Video,
-  BookCopy,
   FileUp,
   HelpCircle,
-  Newspaper
+  Newspaper,
+  MessageCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { StudyMaterialProvider } from '@/contexts/study-material-context';
@@ -79,19 +79,19 @@ function DashboardNav() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+               <SidebarMenuItem>
+                <SidebarMenuButton href="/dashboard/chatbot" asChild>
+                  <Link href="/dashboard/chatbot">
+                    <MessageCircle />
+                    Chatbot
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton href="/dashboard/videos" asChild>
                   <Link href="/dashboard/videos">
                     <Video />
                     Videos
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton href="/dashboard/materials" asChild>
-                  <Link href="/dashboard/materials">
-                    <BookCopy />
-                    My Materials
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

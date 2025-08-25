@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BrainCircuit, Video, BookCopy, ArrowRight, FileUp, HelpCircle, Newspaper } from 'lucide-react';
+import { BrainCircuit, Video, ArrowRight, FileUp, HelpCircle, Newspaper, MessageCircle } from 'lucide-react';
 
 const modules = [
    {
@@ -36,16 +36,16 @@ const modules = [
     icon: <HelpCircle className="h-8 w-8 text-primary" />,
   },
   {
+    title: 'Document Chatbot',
+    description: 'Ask questions about your uploaded document.',
+    href: '/dashboard/chatbot',
+    icon: <MessageCircle className="h-8 w-8 text-primary" />,
+  },
+  {
     title: 'Video Recommender',
     description: 'Get video recommendations based on topics.',
     href: '/dashboard/videos',
     icon: <Video className="h-8 w-8 text-primary" />,
-  },
-  {
-    title: 'My Materials',
-    description: 'Browse and manage your saved study sets.',
-    href: '/dashboard/materials',
-    icon: <BookCopy className="h-8 w-8 text-primary" />,
   },
 ];
 
@@ -80,17 +80,6 @@ export default function DashboardPage() {
             </CardFooter>
           </Card>
         ))}
-         <Card className="flex flex-col border-dashed bg-card/50">
-            <CardHeader>
-               <CardTitle className="font-headline text-xl text-muted-foreground">CV Maker</CardTitle>
-               <CardDescription className="pt-2">Coming soon! Create a professional CV in minutes.</CardDescription>
-            </CardHeader>
-            <CardFooter className="mt-auto">
-              <Button disabled variant="secondary" className="w-full">
-                Coming Soon
-              </Button>
-            </CardFooter>
-          </Card>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ export default function UploadPage() {
             <div>
                 <h1 className="text-3xl font-bold font-headline">Upload Study Material</h1>
                 <p className="text-muted-foreground">
-                    Upload a file or paste text to generate flashcards, quizzes, and video recommendations.
+                    Upload a PDF or Word document to generate flashcards, quizzes, and video recommendations.
                 </p>
             </div>
             <Uploader />
