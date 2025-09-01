@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { searchYouTubeVideosTool } from '../tools/youtube-search';
 
 const RecommendVideosInputSchema = z.object({
   documentSummary: z
@@ -34,13 +35,18 @@ const prompt = ai.definePrompt({
   name: 'recommendVideosPrompt',
   input: {schema: RecommendVideosInputSchema},
   output: {schema: RecommendVideosOutputSchema},
-  prompt: `You are a video recommendation expert. Given the summary of a document, you will recommend relevant videos from YouTube.
+  tools: [searchYouTubeVideosTool],
+  prompt: `You are a helpful assistant that recommends YouTube videos based on the summary of a document. 
+  
+  First, come up with a list of 3-5 concise search queries based on the document summary.
+  Then, for each search query, use the searchYouTubeVideosTool to find relevant videos.
 
-It is critical that you only return valid YouTube links. Each video link must start with 'https://www.youtube.com/watch?v=' and each thumbnail link must be a valid 'i.ytimg.com' URL.
+  From the search results, select the top 1-2 most relevant videos for each query.
+  
+  Compile a final list of recommended videos, ensuring there are no duplicates. Each video must have a title, a valid YouTube link, and a valid thumbnail URL.
 
-Summary: {{{documentSummary}}}
-
-Return a list of video recommendations, including the title, a valid i.ytimg.com thumbnail link, and the link for each video.`,
+  Summary: {{{documentSummary}}}
+  `,
 });
 
 const recommendVideosFlow = ai.defineFlow(

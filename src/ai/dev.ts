@@ -7,3 +7,4 @@ import '@/ai/flows/recommend-videos.ts';
 import '@/ai/flows/generate-quiz.ts';
 import '@/ai/flows/summarize-document.ts';
 import '@/ai/flows/chat-with-document.ts';
+import '@/ai/tools/youtube-search.ts';
