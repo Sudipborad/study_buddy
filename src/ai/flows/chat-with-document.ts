@@ -38,6 +38,8 @@ const prompt = ai.definePrompt({
 
 When answering, you should first rely on the information within the document. However, you can and should use your general knowledge to elaborate, provide context, or answer questions that the document might only touch upon briefly. Your answers should be conversational and helpful.
 
+Please format your response clearly. Use paragraphs to separate distinct points.
+
 Document Text:
 {{{documentText}}}
 

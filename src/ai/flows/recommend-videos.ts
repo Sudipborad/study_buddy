@@ -19,8 +19,8 @@ export type RecommendVideosInput = z.infer<typeof RecommendVideosInputSchema>;
 
 const VideoRecommendationSchema = z.object({
   title: z.string().describe('The title of the video.'),
-  thumbnail: z.string().describe('The URL of the YouTube video thumbnail (hqdefault.jpg).'),
-  link: z.string().describe('The URL of the video.'),
+  thumbnail: z.string().describe('The URL of the YouTube video thumbnail (must be a valid i.ytimg.com URL, specifically hqdefault.jpg).'),
+  link: z.string().describe('The URL of the YouTube video (must be a valid youtube.com/watch link).'),
 });
 
 const RecommendVideosOutputSchema = z.array(VideoRecommendationSchema).describe('A list of recommended videos.');
@@ -35,6 +35,8 @@ const prompt = ai.definePrompt({
   input: {schema: RecommendVideosInputSchema},
   output: {schema: RecommendVideosOutputSchema},
   prompt: `You are a video recommendation expert. Given the summary of a document, you will recommend relevant videos from YouTube.
+
+It is critical that you only return valid YouTube links. Each video link must start with 'https://www.youtube.com/watch?v=' and each thumbnail link must be a valid 'i.ytimg.com' URL.
 
 Summary: {{{documentSummary}}}
 

@@ -31,12 +31,12 @@ const prompt = ai.definePrompt({
   name: 'summarizeDocumentPrompt',
   input: {schema: SummarizeDocumentInputSchema},
   output: {schema: SummarizeDocumentOutputSchema},
-  prompt: `You are an expert at creating concise and informative summaries of documents. The summary should capture the key points and main ideas of the text, but be significantly shorter than the original.
+  prompt: `You are an expert at creating detailed and informative summaries of documents. The summary should capture the key points and main ideas of the text in several paragraphs, but be significantly shorter than the original.
 
 Document Text:
 {{{documentText}}}
 
-Generate a summary of the document.
+Generate a detailed summary of the document.
 `,
 });
 
