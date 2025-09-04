@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BrainCircuit, Video, ArrowRight, FileUp, HelpCircle, Newspaper, MessageCircle } from 'lucide-react';
+import { BrainCircuit, Video, ArrowRight, FileUp, HelpCircle, Newspaper, MessageCircle, Briefcase, Sparkles } from 'lucide-react';
 
 const modules = [
    {
@@ -46,6 +46,18 @@ const modules = [
     description: 'Get video recommendations based on topics.',
     href: '/dashboard/videos',
     icon: <Video className="h-8 w-8 text-primary" />,
+  },
+  {
+    title: 'CV/Resume Maker',
+    description: 'Create a professional resume with our builder.',
+    href: '/dashboard/cv-maker',
+    icon: <Briefcase className="h-8 w-8 text-primary" />,
+  },
+  {
+    title: 'Interview Prep',
+    description: 'Practice with AI-generated interview questions.',
+    href: '/dashboard/interview-prep',
+    icon: <Sparkles className="h-8 w-8 text-primary" />,
   },
 ];
 

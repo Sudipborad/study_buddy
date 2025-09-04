@@ -22,9 +22,12 @@ import {
   HelpCircle,
   Newspaper,
   MessageCircle,
+  Briefcase,
+  Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 import { StudyMaterialProvider } from '@/contexts/study-material-context';
+import { CvDataProvider } from '@/contexts/cv-data-context';
 
 function DashboardNav() {
   return (
@@ -95,6 +98,22 @@ function DashboardNav() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/dashboard/cv-maker" asChild>
+                  <Link href="/dashboard/cv-maker">
+                    <Briefcase />
+                    CV Maker
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+               <SidebarMenuItem>
+                <SidebarMenuButton href="/dashboard/interview-prep" asChild>
+                  <Link href="/dashboard/interview-prep">
+                    <Sparkles />
+                    Interview Prep
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter className="p-2">
@@ -130,9 +149,11 @@ export default function DashboardLayout({
 }) {
   return (
       <StudyMaterialProvider>
-        <SidebarProvider>
-          <MainContent>{children}</MainContent>
-        </SidebarProvider>
+        <CvDataProvider>
+          <SidebarProvider>
+            <MainContent>{children}</MainContent>
+          </SidebarProvider>
+        </CvDataProvider>
       </StudyMaterialProvider>
   );
 }
