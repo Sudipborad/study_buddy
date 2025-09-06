@@ -1,7 +1,7 @@
 'use client';
 import { type CvData } from "@/lib/types";
 import { Separator } from "../ui/separator";
-import { Mail, Phone, MapPin, Briefcase, GraduationCap, Star } from 'lucide-react';
+import { Mail, Phone, MapPin, Briefcase, GraduationCap, Star, FileText } from 'lucide-react';
 
 interface ResumeTemplateProps {
     cvData: CvData | null;
