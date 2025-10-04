@@ -8,7 +8,7 @@ interface ResumeTemplateProps {
 }
 
 export function ResumeTemplate({ cvData }: ResumeTemplateProps) {
-    if (!cvData) {
+    if (!cvData || !cvData.fullName) {
         return (
             <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center h-full">
                 <FileText className="h-16 w-16 mb-4" />
