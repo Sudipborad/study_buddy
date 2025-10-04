@@ -7,5 +7,5 @@ if (!process.env.GEMINI_API_KEY) {
 
 export const ai = genkit({
   plugins: [googleAI()],
-  model: 'gemini-1.5-flash-latest',
+  model: 'gemini-pro',
 });
