@@ -21,13 +21,12 @@ interface DashboardUserProps {
 }
 
 export function DashboardUser({ showGreeting = false }: DashboardUserProps) {
-    const { user } = useAuth();
+    const { user, logOut } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
 
     const handleLogout = async () => {
         try {
-            const { logOut } = useAuth();
             await logOut();
             toast({ title: "Logged Out", description: "You have been successfully logged out." });
             router.push('/dashboard');
