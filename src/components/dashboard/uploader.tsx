@@ -7,19 +7,16 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Loader2, UploadCloud, Save } from 'lucide-react';
+import { Loader2, UploadCloud, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { StudyMaterialContext } from '@/contexts/study-material-context';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/auth-context';
-import { addMaterial } from '@/lib/firebase/firestore';
 
 export function Uploader() {
   const [isUploading, setIsUploading] = useState(false);
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>('');
-  const { setStudyMaterial } = useContext(StudyMaterialContext);
-  const { user } = useAuth();
+  const { setStudyMaterial, setDocumentTitle } = useContext(StudyMaterialContext);
   const router = useRouter();
   const { toast } = useToast();
   
@@ -30,6 +27,8 @@ export function Uploader() {
     setIsUploading(true);
     setFileContent(null);
     setFileName('');
+    setStudyMaterial(null);
+    setDocumentTitle(null);
 
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
       toast({ variant: 'destructive', title: 'File too large', description: 'Please upload a file smaller than 5MB.' });
@@ -37,9 +36,9 @@ export function Uploader() {
       return;
     }
     
-    const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
+    const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword', 'text/plain'];
     if (!allowedTypes.includes(file.type)) {
-       toast({ variant: 'destructive', title: 'Invalid file type', description: 'Please upload a .pdf or .docx file.' });
+       toast({ variant: 'destructive', title: 'Invalid file type', description: 'Please upload a .pdf, .docx, or .txt file.' });
        setIsUploading(false);
        return;
     }
@@ -75,9 +74,10 @@ export function Uploader() {
         setFileContent(truncatedText);
         setFileName(file.name);
         setStudyMaterial(truncatedText);
+        setDocumentTitle(file.name);
         toast({
           title: 'File Processed',
-          description: "Your document is ready. Save it to your materials or proceed to other tools.",
+          description: "Your document has been loaded. You can now use the AI tools.",
         })
 
 
@@ -90,40 +90,8 @@ export function Uploader() {
     }
   };
   
-  const handleSaveMaterial = async () => {
-    if (!fileContent || !user || !fileName) {
-      toast({
-        variant: 'destructive',
-        title: 'Cannot Save Material',
-        description: 'No file has been processed or you are not logged in.',
-      });
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      await addMaterial(user.uid, {
-        title: fileName,
-        content: fileContent,
-        type: fileName.split('.').pop() || 'file',
-      });
-
-      toast({
-        title: 'Material Saved!',
-        description: `${fileName} has been saved to your account.`,
-      });
-      router.push('/dashboard/materials');
-
-    } catch (error) {
-      console.error('Error saving material:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Save Failed',
-        description: 'There was a problem saving your material.',
-      });
-    } finally {
-      setIsUploading(false);
-    }
+  const handleProceed = () => {
+    router.push('/dashboard/summary');
   };
 
 
@@ -134,13 +102,13 @@ export function Uploader() {
               <div className="flex flex-col items-center justify-center space-y-4 text-center">
                     <UploadCloud className="h-16 w-16 text-muted-foreground" />
                     <h3 className="text-xl font-semibold font-headline">Click to upload or drag and drop</h3>
-                    <p className="text-sm text-muted-foreground">PDF or DOCX, up to 5MB</p>
+                    <p className="text-sm text-muted-foreground">PDF, DOCX or TXT (up to 5MB)</p>
                   <Input 
                       type="file" 
                       className="hidden" 
                       id="file-upload" 
                       onChange={handleFileChange} 
-                      accept=".pdf,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
+                      accept=".pdf,.docx,.txt,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" 
                       disabled={isUploading}
                   />
                   <Button asChild disabled={isUploading} size="lg">
@@ -163,13 +131,12 @@ export function Uploader() {
           <CardHeader>
             <CardTitle>File Ready</CardTitle>
             <CardDescription>
-              Your document <span className="font-bold text-primary">{fileName}</span> has been processed. You can now use the AI tools or save it to your materials for later.
+              Your document <span className="font-bold text-primary">{fileName}</span> has been processed. Proceed to the summary page to begin.
             </CardDescription>
           </CardHeader>
           <CardContent>
-             <Button size="lg" onClick={handleSaveMaterial} disabled={isUploading}>
-                <Save className="mr-2" />
-                Save to My Materials
+             <Button size="lg" onClick={handleProceed}>
+                Go to Summary <ArrowRight className="ml-2" />
              </Button>
           </CardContent>
         </Card>

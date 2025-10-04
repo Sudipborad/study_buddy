@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import mammoth from 'mammoth';
 import pdf from 'pdf-parse/lib/pdf-parse';
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
       const result = await mammoth.extractRawText({ buffer });
       text = result.value;
     } else {
-      return NextResponse.json({ error: 'Unsupported file type.' }, { status: 400 });
+      return NextResponse.json({ error: 'Unsupported file type. Please upload a PDF, DOCX, or TXT file.' }, { status: 400 });
     }
 
     return NextResponse.json({ text });

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useContext, useEffect } from 'react';
@@ -19,14 +20,12 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import { FlippableCard } from './flippable-card';
-import { type Flashcard } from '@/lib/types';
 import { generateFlashcards } from '@/ai/flows/generate-flashcards';
 import { StudyMaterialContext } from '@/contexts/study-material-context';
 
 export function FlashcardGenerator() {
   const [isLoading, setIsLoading] = useState(false);
-  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
-  const { studyMaterial } = useContext(StudyMaterialContext);
+  const { studyMaterial, flashcards, setFlashcards } = useContext(StudyMaterialContext);
   const { toast } = useToast();
 
   const handleGenerate = async () => {
@@ -68,8 +67,8 @@ export function FlashcardGenerator() {
   };
 
   useEffect(() => {
-    // Automatically generate flashcards when component mounts with study material
-    if (studyMaterial) {
+    // Automatically generate flashcards if material exists but flashcards don't
+    if (studyMaterial && flashcards.length === 0) {
       handleGenerate();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

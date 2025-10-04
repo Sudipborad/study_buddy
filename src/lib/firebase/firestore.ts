@@ -1,14 +1,15 @@
 
 import { db } from './config';
-import { collection, addDoc, getDocs, doc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, deleteDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { Flashcard } from '../types';
 
-interface MaterialData {
+interface StudySetData {
     title: string;
-    content: string;
-    type: string;
+    summary: string;
+    flashcards: Flashcard[];
 }
 
-export const addMaterial = async (userId: string, materialData: MaterialData) => {
+export const addMaterial = async (userId: string, materialData: StudySetData) => {
     try {
         await addDoc(collection(db, 'users', userId, 'materials'), {
             ...materialData,
@@ -21,7 +22,8 @@ export const addMaterial = async (userId: string, materialData: MaterialData) =>
 };
 
 export const getMaterials = async (userId: string) => {
-    const querySnapshot = await getDocs(collection(db, 'users', userId, 'materials'));
+    const materialsQuery = query(collection(db, 'users', userId, 'materials'), orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(materialsQuery);
     return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),

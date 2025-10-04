@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useContext, useEffect } from 'react';
@@ -9,21 +10,34 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Lightbulb } from 'lucide-react';
+import { Loader2, Wand2, Lightbulb, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { type DocumentSummary } from '@/lib/types';
 import { summarizeDocument } from '@/ai/flows/summarize-document';
+import { generateFlashcards } from '@/ai/flows/generate-flashcards';
 import { StudyMaterialContext } from '@/contexts/study-material-context';
 import { ScrollArea } from '../ui/scroll-area';
+import { addMaterial } from '@/lib/firebase/firestore';
+import { useAuth } from '@/contexts/auth-context';
+import { useRouter } from 'next/navigation';
 
 export function DocumentSummarizer() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [summary, setSummary] = useState<DocumentSummary | null>(null);
-  const { studyMaterial } = useContext(StudyMaterialContext);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { 
+    studyMaterial, 
+    summary, setSummary, 
+    setFlashcards, 
+    documentTitle,
+    flashcards
+  } = useContext(StudyMaterialContext);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const router = useRouter();
 
-  const handleGenerate = async () => {
-    if (!studyMaterial) {
+
+  const handleGenerate = async (material: string) => {
+    if (!material) {
       toast({
         variant: 'destructive',
         title: 'No study material found.',
@@ -31,16 +45,28 @@ export function DocumentSummarizer() {
       });
       return;
     }
-    setIsLoading(true);
+    setIsGenerating(true);
     setSummary(null);
+    setFlashcards([]);
     try {
-      const result = await summarizeDocument({ documentText: studyMaterial });
-      if (result.summary) {
-        setSummary(result);
+      const summaryResult = await summarizeDocument({ documentText: material });
+      if (summaryResult.summary) {
+        setSummary(summaryResult);
         toast({
           title: 'Success!',
           description: 'Generated document summary.',
         });
+        
+        // Now generate flashcards in the background
+        const flashcardResult = await generateFlashcards({ studyMaterial: material });
+        if (flashcardResult.flashcards && flashcardResult.flashcards.length > 0) {
+          setFlashcards(flashcardResult.flashcards);
+          toast({
+            title: 'Flashcards Ready!',
+            description: `Generated ${flashcardResult.flashcards.length} flashcards.`,
+          });
+        }
+
       } else {
         toast({
           variant: 'destructive',
@@ -49,39 +75,73 @@ export function DocumentSummarizer() {
         });
       }
     } catch (error) {
-      console.error('Error generating summary:', error);
+      console.error('Error generating content:', error);
       toast({
         variant: 'destructive',
         title: 'An error occurred.',
-        description: 'Failed to generate summary. Please try again later.',
+        description: 'Failed to generate content. Please try again later.',
       });
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
     }
   };
+  
+  const handleSave = async () => {
+    if (!user || !documentTitle || !summary || flashcards.length === 0) {
+       toast({
+        variant: 'destructive',
+        title: 'Cannot Save Study Set',
+        description: 'Ensure a summary and flashcards have been generated before saving.',
+      });
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await addMaterial(user.uid, {
+        title: documentTitle,
+        summary: summary.summary,
+        flashcards: flashcards,
+      });
+      toast({
+        title: 'Study Set Saved!',
+        description: 'Your summary and flashcards have been saved to My Materials.',
+      });
+      router.push('/dashboard/materials');
+    } catch (error) {
+       console.error('Error saving material:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Save Failed',
+        description: 'There was a problem saving your study set.',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
 
   useEffect(() => {
-    if (studyMaterial) {
-      handleGenerate();
+    if (studyMaterial && !summary) {
+      handleGenerate(studyMaterial);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studyMaterial]);
 
   return (
     <div className="space-y-8">
-      {isLoading && (
-        <div className="text-center p-10">
+      {isGenerating && (
+        <Card className="text-center p-10">
           <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-          <p className="mt-4 text-muted-foreground">The AI is summarizing your document... this may take a moment.</p>
-        </div>
+          <p className="mt-4 text-muted-foreground">The AI is summarizing and creating flashcards... this may take a moment.</p>
+        </Card>
       )}
 
-      {summary && !isLoading && (
+      {summary && !isGenerating && (
         <>
           <Card>
             <CardHeader>
               <CardTitle>Generated Summary</CardTitle>
-              <CardDescription>This is a concise overview of your document.</CardDescription>
+              <CardDescription>This is a concise overview of your document. Flashcards have also been generated.</CardDescription>
             </CardHeader>
             <CardContent>
                 <ScrollArea className="h-96 w-full rounded-md border p-4">
@@ -91,9 +151,9 @@ export function DocumentSummarizer() {
                 </ScrollArea>
             </CardContent>
           </Card>
-          <div className='text-center'>
-            <Button onClick={handleGenerate} disabled={isLoading}>
-                {isLoading ? (
+          <div className='text-center flex items-center justify-center gap-4'>
+            <Button onClick={() => handleGenerate(studyMaterial!)} disabled={isGenerating || isSaving}>
+                {isGenerating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Regenerating...
@@ -105,11 +165,24 @@ export function DocumentSummarizer() {
                   </>
                 )}
               </Button>
+               <Button onClick={handleSave} disabled={isGenerating || isSaving || flashcards.length === 0}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Study Set
+                  </>
+                )}
+              </Button>
           </div>
         </>
       )}
 
-      {!isLoading && !summary && (
+      {!isGenerating && !summary && (
         <Card className="text-center p-10 bg-secondary/50 border-dashed">
           <div className="flex justify-center mb-4">
             <div className="bg-primary/10 p-4 rounded-full">
