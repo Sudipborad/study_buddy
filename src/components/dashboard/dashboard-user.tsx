@@ -21,12 +21,13 @@ interface DashboardUserProps {
 }
 
 export function DashboardUser({ showGreeting = false }: DashboardUserProps) {
-    const { user, logOut } = useAuth();
+    const { user } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
 
     const handleLogout = async () => {
         try {
+            const { logOut } = useAuth();
             await logOut();
             toast({ title: "Logged Out", description: "You have been successfully logged out." });
             router.push('/dashboard');
@@ -37,8 +38,14 @@ export function DashboardUser({ showGreeting = false }: DashboardUserProps) {
     
     if (!user) return null;
 
+    const getDisplayName = () => {
+        if (user.displayName) return user.displayName;
+        if (user.email) return user.email.split('@')[0];
+        return "User";
+    }
+
     if (showGreeting) {
-        return <>Welcome, {user.email}!</>
+        return <>Welcome, {getDisplayName()}!</>
     }
 
     return (
@@ -50,7 +57,7 @@ export function DashboardUser({ showGreeting = false }: DashboardUserProps) {
                         <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="text-left group-data-[collapsible=icon]:hidden">
-                        <div className="font-medium truncate">{user.displayName || user.email}</div>
+                        <div className="font-medium truncate">{getDisplayName()}</div>
                         <div className="text-xs text-muted-foreground truncate">{user.email}</div>
                     </div>
                     <ChevronDown className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
@@ -59,7 +66,7 @@ export function DashboardUser({ showGreeting = false }: DashboardUserProps) {
             <DropdownMenuContent className="w-56 mb-2 ml-2" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.displayName || "User"}</p>
+                        <p className="text-sm font-medium leading-none">{getDisplayName()}</p>
                         <p className="text-xs leading-none text-muted-foreground">
                            {user.email}
                         </p>
