@@ -24,10 +24,14 @@ import {
   MessageCircle,
   Briefcase,
   Sparkles,
+  BookMarked,
 } from 'lucide-react';
 import Link from 'next/link';
 import { StudyMaterialProvider } from '@/contexts/study-material-context';
 import { CvDataProvider } from '@/contexts/cv-data-context';
+import { AuthProvider, useAuth } from '@/contexts/auth-context';
+import { AuthForm } from '@/components/auth/auth-form';
+import { DashboardUser } from '@/components/dashboard/dashboard-user';
 
 function DashboardNav() {
   return (
@@ -55,6 +59,14 @@ function DashboardNav() {
                   <Link href="/dashboard/upload">
                     <FileUp />
                     Upload Material
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/dashboard/materials" asChild>
+                  <Link href="/dashboard/materials">
+                    <BookMarked />
+                    My Materials
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -117,28 +129,38 @@ function DashboardNav() {
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter className="p-2">
-            
+            <DashboardUser />
           </SidebarFooter>
         </Sidebar>
   )
 }
 
 function MainContent({ children }: { children: React.ReactNode }) {
+    const { user } = useAuth();
+    
+    if (!user) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-secondary/30 p-4">
+                <AuthForm />
+            </div>
+        );
+    }
+    
     return (
-        <>
+        <SidebarProvider>
             <DashboardNav />
             <SidebarInset className="bg-secondary/30">
                 <header className="flex h-16 items-center border-b bg-background/80 px-6 backdrop-blur-sm md:justify-end">
                 <SidebarTrigger className="md:hidden" />
                 <div className="flex items-center gap-4 ml-auto">
                     <p className="font-semibold text-lg font-headline hidden md:block">
-                      Welcome!
+                      <DashboardUser showGreeting />
                     </p>
                 </div>
                 </header>
                 <main className="flex-1 p-4 sm:p-6">{children}</main>
             </SidebarInset>
-        </>
+        </SidebarProvider>
     )
 }
 
@@ -148,12 +170,12 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
+    <AuthProvider>
       <StudyMaterialProvider>
         <CvDataProvider>
-          <SidebarProvider>
-            <MainContent>{children}</MainContent>
-          </SidebarProvider>
+          <MainContent>{children}</MainContent>
         </CvDataProvider>
       </StudyMaterialProvider>
+    </AuthProvider>
   );
 }

@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import {
   Card,
@@ -8,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BrainCircuit, Video, ArrowRight, FileUp, HelpCircle, Newspaper, MessageCircle, Briefcase, Sparkles } from 'lucide-react';
+import { BrainCircuit, Video, ArrowRight, FileUp, HelpCircle, Newspaper, MessageCircle, Briefcase, Sparkles, BookMarked } from 'lucide-react';
 
 const modules = [
    {
@@ -16,6 +17,12 @@ const modules = [
     description: 'Upload your study material to get started.',
     href: '/dashboard/upload',
     icon: <FileUp className="h-8 w-8 text-primary" />,
+  },
+  {
+    title: 'My Materials',
+    description: 'View and manage your saved documents.',
+    href: '/dashboard/materials',
+    icon: <BookMarked className="h-8 w-8 text-primary" />,
   },
   {
     title: 'Summarizer',
