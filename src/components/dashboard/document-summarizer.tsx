@@ -109,11 +109,12 @@ export function DocumentSummarizer() {
       });
       router.push('/dashboard/materials');
     } catch (error) {
+       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred saving your study set.';
        console.error('Error saving material:', error);
       toast({
         variant: 'destructive',
         title: 'Save Failed',
-        description: 'There was a problem saving your study set.',
+        description: errorMessage,
       });
     } finally {
       setIsSaving(false);
