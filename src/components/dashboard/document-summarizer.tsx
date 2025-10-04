@@ -75,11 +75,12 @@ export function DocumentSummarizer() {
         });
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
       console.error('Error generating content:', error);
       toast({
         variant: 'destructive',
         title: 'An error occurred.',
-        description: 'Failed to generate content. Please try again later.',
+        description: `Failed to generate content: ${errorMessage}`,
       });
     } finally {
       setIsGenerating(false);
