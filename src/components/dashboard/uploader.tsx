@@ -60,6 +60,19 @@ export function Uploader() {
         }
 
         const data = await response.json();
+
+        // Check if the extracted text is substantial
+        if (!data.text || data.text.trim().length < 100) {
+            toast({
+                variant: 'destructive',
+                title: 'Not a valid document',
+                description: 'This document does not contain enough text to be used as study material. Please upload a different file.',
+                duration: 5000,
+            });
+            setIsUploading(false);
+            return;
+        }
+
         const truncatedText = data.text.slice(0, 10000);
         await saveAndRedirect(truncatedText);
 
