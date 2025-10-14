@@ -22,6 +22,23 @@ Study Smarter is a modern web application built with Next.js and powered by AI t
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 
+## 📁 Project Structure
+
+This project is organized into separate frontend and backend folders:
+
+```
+study-buddy/
+├── frontend/          # Next.js frontend application
+│   ├── src/          # Source code
+│   ├── package.json  # Frontend dependencies
+│   └── ...
+├── backend/          # Firebase backend services
+│   ├── firebase.json # Firebase configuration
+│   ├── package.json  # Backend dependencies
+│   └── ...
+└── package.json      # Root package.json for managing both
+```
+
 ## ⚙️ Getting Started
 
 Follow these instructions to get a local copy up and running.
@@ -30,6 +47,7 @@ Follow these instructions to get a local copy up and running.
 
 - [Node.js](https://nodejs.org/en) (version 20 or later recommended)
 - [npm](https://www.npmjs.com/) or a compatible package manager
+- [Firebase CLI](https://firebase.google.com/docs/cli) for backend services
 
 ### Installation
 
@@ -39,14 +57,14 @@ Follow these instructions to get a local copy up and running.
     cd study-smarter
     ```
 
-2.  **Install dependencies:**
+2.  **Install all dependencies:**
     ```bash
-    npm install
+    npm run install:all
     ```
 
 ### Environment Variables
 
-To run this project, you need to set up your environment variables. Create a file named `.env.local` in the root of your project and add the following variables.
+To run this project, you need to set up your environment variables. Create a file named `.env.local` in the `frontend` folder and add the following variables.
 
 ```env
 # Google AI API Key for Genkit
@@ -61,23 +79,40 @@ You can obtain a `GEMINI_API_KEY` from [Google AI Studio](https://aistudio.googl
 
 ### Available Scripts
 
--   **Run the development server:**
+-   **Run both frontend and backend in development:**
     ```bash
     npm run dev
     ```
-    Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+    This will start the Next.js frontend on [http://localhost:3000](http://localhost:3000) and Firebase emulators for the backend.
 
--   **Build the application for production:**
+-   **Run only the frontend:**
+    ```bash
+    npm run dev:frontend
+    ```
+
+-   **Run only the backend:**
+    ```bash
+    npm run dev:backend
+    ```
+
+-   **Build both frontend and backend:**
     ```bash
     npm run build
     ```
 
--   **Start the production server:**
+-   **Frontend-specific commands:**
     ```bash
-    npm run start
+    cd frontend
+    npm run dev     # Development server
+    npm run build   # Production build
+    npm run start   # Production server
+    npm run lint    # Lint code
     ```
 
--   **Lint the code:**
+-   **Backend-specific commands:**
     ```bash
-    npm run lint
+    cd backend
+    npm run serve   # Start Firebase emulators
+    npm run deploy  # Deploy to Firebase
+    npm run logs    # View Firebase logs
     ```
