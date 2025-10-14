@@ -1,6 +1,6 @@
 
 import { db } from './config';
-import { collection, addDoc, getDocs, doc, deleteDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, deleteDoc, serverTimestamp, query, orderBy, updateDoc } from 'firebase/firestore';
 import { Flashcard } from '../types';
 
 interface StudySetData {
@@ -9,12 +9,19 @@ interface StudySetData {
     flashcards: Flashcard[];
 }
 
+interface FlashcardSetData {
+    title: string;
+    flashcards: Flashcard[];
+    sourceDocument?: string;
+}
+
 export const addMaterial = async (userId: string, materialData: StudySetData) => {
     try {
-        await addDoc(collection(db, 'users', userId, 'materials'), {
+        const docRef = await addDoc(collection(db, 'users', userId, 'materials'), {
             ...materialData,
             createdAt: serverTimestamp(),
         });
+        return docRef.id;
     } catch (error) {
         console.error('Error adding document: ', error);
         throw new Error('Failed to save material.');

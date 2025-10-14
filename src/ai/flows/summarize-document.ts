@@ -47,7 +47,30 @@ const summarizeDocumentFlow = ai.defineFlow(
     outputSchema: SummarizeDocumentOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    const maxRetries = 3;
+    let lastError;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const {output} = await prompt(input);
+        return output!;
+      } catch (error: any) {
+        lastError = error;
+        
+        // Check if it's a 503 Service Unavailable error
+        if (error.status === 503 && attempt < maxRetries) {
+          // Wait for exponential backoff before retry (2s, 4s, 8s)
+          const delay = Math.pow(2, attempt) * 1000;
+          console.log(`API overloaded, retrying in ${delay}ms... (attempt ${attempt}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        // If it's not a 503 or we've exhausted retries, throw the error
+        throw error;
+      }
+    }
+    
+    throw lastError;
   }
 );
