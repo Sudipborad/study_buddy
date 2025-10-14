@@ -24,7 +24,8 @@ export const addMaterial = async (userId: string, materialData: StudySetData) =>
         return docRef.id;
     } catch (error) {
         console.error('Error adding document: ', error);
-        throw new Error('Failed to save material.');
+        // Re-throw the original error to be caught by the component
+        throw error;
     }
 };
 
