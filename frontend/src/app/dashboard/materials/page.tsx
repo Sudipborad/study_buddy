@@ -18,6 +18,7 @@ import { Loader2, Trash2, BookOpen, PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { type Flashcard } from "@/lib/types";
+import { FirebaseTest } from "@/components/firebase-test";
 
 interface Material {
   id: string;
@@ -51,16 +52,22 @@ export default function MaterialsPage() {
   }, [user, router]);
 
   const fetchMaterials = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user found');
+      return;
+    }
+    console.log('Fetching materials for user:', user.uid);
     setIsLoading(true);
     try {
       const userMaterials = await getMaterials(user.uid);
+      console.log('Fetched materials:', userMaterials);
       setMaterials(userMaterials as Material[]);
     } catch (error) {
+      console.error('Error fetching materials:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch materials.",
+        description: "Failed to fetch materials. Check console for details.",
       });
     } finally {
       setIsLoading(false);
@@ -69,28 +76,28 @@ export default function MaterialsPage() {
 
   const handleLoadMaterial = (material: Material) => {
     console.log("Loading material:", material.title);
-    console.log("Material summary length:", material.summary?.length || 0);
+    
+    // Store in localStorage for persistence
+    localStorage.setItem('loadedMaterial', JSON.stringify({
+      title: material.title,
+      summary: material.summary,
+      flashcards: material.flashcards,
+      isSaved: true
+    }));
 
     setDocumentTitle(material.title);
     setSummary({ summary: material.summary });
     setFlashcards(material.flashcards);
-    setIsSaved(true); // Mark as saved since this is loaded from database
-    // Setting study material to null to prevent re-generation
-    setStudyMaterial(null);
-
-    console.log("Context updated - navigating to summary");
+    setIsSaved(true);
+    setStudyMaterial('LOADED_FROM_MATERIALS');
 
     toast({
       title: "Study Set Loaded",
-      description:
-        "The summary and flashcards are now active. Navigating to Summary page...",
-      duration: 3000,
+      description: "The summary and flashcards are now active.",
+      duration: 2000,
     });
 
-    // Use setTimeout to ensure state has updated before navigation
-    setTimeout(() => {
-      router.push("/dashboard/summary");
-    }, 500);
+    router.push("/dashboard/summary");
   };
 
   const handleDeleteMaterial = async (materialId: string) => {
@@ -128,6 +135,8 @@ export default function MaterialsPage() {
           flashcards.
         </p>
       </div>
+      
+      <FirebaseTest />
 
       {materials.length === 0 ? (
         <Card className="text-center p-10 bg-secondary/50 border-dashed">

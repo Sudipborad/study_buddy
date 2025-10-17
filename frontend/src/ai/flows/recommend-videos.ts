@@ -36,14 +36,15 @@ const prompt = ai.definePrompt({
   input: {schema: RecommendVideosInputSchema},
   output: {schema: RecommendVideosOutputSchema},
   tools: [searchYouTubeVideosTool],
-  prompt: `You are a helpful assistant that recommends YouTube videos based on the summary of a document. 
-  
-  First, come up with a list of 3-5 concise search queries based on the document summary.
-  Then, for each search query, use the searchYouTubeVideosTool to find relevant videos.
+  prompt: `You are a helpful assistant that recommends YouTube videos based on the summary of a document.
 
-  From the search results, select the top 1-2 most relevant videos for each query.
-  
-  Compile a final list of recommended videos, ensuring there are no duplicates. Each video must have a title, a valid YouTube link, and a valid thumbnail URL.
+  IMPORTANT: You MUST use the searchYouTubeVideosTool to find real videos. DO NOT generate fake video data.
+
+  Steps:
+  1. Create 2-3 concise search queries based on the document summary
+  2. For each query, use searchYouTubeVideosTool to get real YouTube videos
+  3. Return ONLY the videos found by the tool - do not modify titles, links, or thumbnails
+  4. If no videos are found, return an empty array
 
   Summary: {{{documentSummary}}}
   `,
@@ -56,7 +57,49 @@ const recommendVideosFlow = ai.defineFlow(
     outputSchema: RecommendVideosOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    const maxRetries = 3;
+    let lastError;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Video recommendation attempt ${attempt}/${maxRetries}`);
+        const {output} = await prompt(input);
+        
+        if (!output || !Array.isArray(output)) {
+          console.warn('No valid output received from AI');
+          return [];
+        }
+        
+        // Filter out any invalid video entries
+        const validVideos = output.filter(video => 
+          video && 
+          typeof video.title === 'string' && 
+          typeof video.link === 'string' && 
+          video.title.length > 0 && 
+          video.link.includes('youtube.com')
+        );
+        
+        console.log(`Found ${validVideos.length} valid videos`);
+        return validVideos;
+        
+      } catch (error: any) {
+        lastError = error;
+        console.error(`Video recommendation attempt ${attempt} failed:`, error.message);
+        
+        // Check if it's a 503 Service Unavailable error (like Gemini overload)
+        if (error.status === 503 && attempt < maxRetries) {
+          const delay = Math.pow(2, attempt) * 1000;
+          console.log(`AI service overloaded, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        // If it's not retryable or last attempt, break
+        break;
+      }
+    }
+    
+    console.error('All video recommendation attempts failed:', lastError?.message);
+    return [];
   }
 );

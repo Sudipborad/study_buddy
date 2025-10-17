@@ -30,13 +30,27 @@ export const addMaterial = async (userId: string, materialData: StudySetData) =>
 };
 
 export const getMaterials = async (userId: string) => {
-    const materialsQuery = query(collection(db, 'users', userId, 'materials'), orderBy('createdAt', 'desc'));
-    const querySnapshot = await getDocs(materialsQuery);
-    return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate().toLocaleDateString() || new Date().toLocaleDateString(),
-    }));
+    try {
+        console.log('Fetching materials for user:', userId);
+        const materialsQuery = query(collection(db, 'users', userId, 'materials'), orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(materialsQuery);
+        console.log('Found materials:', querySnapshot.size);
+        
+        const materials = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            console.log('Material data:', { id: doc.id, title: data.title });
+            return {
+                id: doc.id,
+                ...data,
+                createdAt: data.createdAt?.toDate().toLocaleDateString() || new Date().toLocaleDateString(),
+            };
+        });
+        
+        return materials;
+    } catch (error) {
+        console.error('Error fetching materials:', error);
+        throw error;
+    }
 };
 
 export const deleteMaterial = async (userId: string, materialId: string) => {

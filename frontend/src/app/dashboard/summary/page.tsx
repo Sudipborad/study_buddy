@@ -1,7 +1,6 @@
 'use client';
 
 import { useContext, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { StudyMaterialContext } from '@/contexts/study-material-context';
 import { DocumentSummarizer } from "@/components/dashboard/document-summarizer";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -10,35 +9,24 @@ import { FileUp } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SummaryPage() {
-    const { studyMaterial } = useContext(StudyMaterialContext);
-    const router = useRouter();
+    const { studyMaterial, summary, setDocumentTitle, setSummary, setFlashcards, setIsSaved, setStudyMaterial } = useContext(StudyMaterialContext);
 
     useEffect(() => {
-        if (!studyMaterial) {
-            router.push('/dashboard/upload');
+        const loadedMaterial = localStorage.getItem('loadedMaterial');
+        if (loadedMaterial && !summary) {
+            const material = JSON.parse(loadedMaterial);
+            setDocumentTitle(material.title);
+            setSummary({ summary: material.summary });
+            setFlashcards(material.flashcards);
+            setIsSaved(material.isSaved);
+            setStudyMaterial('LOADED_FROM_MATERIALS');
+            localStorage.removeItem('loadedMaterial');
         }
-    }, [studyMaterial, router]);
+    }, [summary, setDocumentTitle, setSummary, setFlashcards, setIsSaved, setStudyMaterial]);
 
-    if (!studyMaterial) {
-        return (
-             <Card className="w-full max-w-lg mx-auto mt-10 text-center">
-                <CardHeader>
-                    <CardTitle className="font-headline">No Study Material Found</CardTitle>
-                    <CardDescription>
-                        Please upload your study material first to generate a summary.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Button asChild>
-                        <Link href="/dashboard/upload">
-                            <FileUp className="mr-2" />
-                            Upload Material
-                        </Link>
-                    </Button>
-                </CardContent>
-            </Card>
-        );
-    }
+    console.log('Summary page - studyMaterial:', studyMaterial);
+    console.log('Summary page - summary:', summary);
+
     return (
         <div className="space-y-8">
             <div>
@@ -49,5 +37,5 @@ export default function SummaryPage() {
             </div>
             <DocumentSummarizer />
         </div>
-    )
+    );
 }
