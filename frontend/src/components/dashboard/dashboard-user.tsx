@@ -52,8 +52,8 @@ export function DashboardUser({ showGreeting = false }: DashboardUserProps) {
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="w-full h-auto p-2 justify-start group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center">
                     <Avatar className="h-10 w-10 mr-2 group-data-[collapsible=icon]:mr-0">
-                        <AvatarImage src={user.photoURL ?? `https://placehold.co/100x100.png`} alt={user.displayName || 'User'} data-ai-hint="user avatar" />
-                        <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                        <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} data-ai-hint="user avatar" />
+                        <AvatarFallback className="bg-primary text-primary-foreground font-semibold">{user.email?.[0].toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="text-left group-data-[collapsible=icon]:hidden">
                         <div className="font-medium truncate">{getDisplayName()}</div>
