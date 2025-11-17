@@ -4,10 +4,7 @@ export const connectDB = async (): Promise<void> => {
   try {
     const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/study_buddy';
     
-    const conn = await mongoose.connect(mongoURI, {
-      // Remove deprecated options
-      // useNewUrlParser and useUnifiedTopology are no longer needed in Mongoose 6+
-    });
+    const conn = await mongoose.connect(mongoURI);
 
     console.log(`🍃 MongoDB Connected: ${conn.connection.host}`);
     
