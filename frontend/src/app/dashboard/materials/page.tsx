@@ -18,7 +18,6 @@ import { Loader2, Trash2, BookOpen, PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { type Flashcard } from "@/lib/types";
-import { FirebaseTest } from "@/components/firebase-test";
 
 interface Material {
   id: string;
@@ -53,17 +52,17 @@ export default function MaterialsPage() {
 
   const fetchMaterials = async () => {
     if (!user) {
-      console.log('No user found');
+      console.log("No user found");
       return;
     }
-    console.log('Fetching materials for user:', user.uid);
+    console.log("Fetching materials for user:", user.id);
     setIsLoading(true);
     try {
-      const userMaterials = await getMaterials(user.uid);
-      console.log('Fetched materials:', userMaterials);
+      const userMaterials = await getMaterials(user.id);
+      console.log("Fetched materials:", userMaterials);
       setMaterials(userMaterials as Material[]);
     } catch (error) {
-      console.error('Error fetching materials:', error);
+      console.error("Error fetching materials:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -76,20 +75,23 @@ export default function MaterialsPage() {
 
   const handleLoadMaterial = (material: Material) => {
     console.log("Loading material:", material.title);
-    
+
     // Store in localStorage for persistence
-    localStorage.setItem('loadedMaterial', JSON.stringify({
-      title: material.title,
-      summary: material.summary,
-      flashcards: material.flashcards,
-      isSaved: true
-    }));
+    localStorage.setItem(
+      "loadedMaterial",
+      JSON.stringify({
+        title: material.title,
+        summary: material.summary,
+        flashcards: material.flashcards,
+        isSaved: true,
+      })
+    );
 
     setDocumentTitle(material.title);
     setSummary({ summary: material.summary });
     setFlashcards(material.flashcards);
     setIsSaved(true);
-    setStudyMaterial('LOADED_FROM_MATERIALS');
+    setStudyMaterial("LOADED_FROM_MATERIALS");
 
     toast({
       title: "Study Set Loaded",
@@ -103,7 +105,7 @@ export default function MaterialsPage() {
   const handleDeleteMaterial = async (materialId: string) => {
     if (!user) return;
     try {
-      await deleteMaterial(user.uid, materialId);
+      await deleteMaterial(user.id, materialId);
       setMaterials(materials.filter((m) => m.id !== materialId));
       toast({
         title: "Success",
@@ -135,8 +137,6 @@ export default function MaterialsPage() {
           flashcards.
         </p>
       </div>
-      
-      <FirebaseTest />
 
       {materials.length === 0 ? (
         <Card className="text-center p-10 bg-secondary/50 border-dashed">

@@ -125,7 +125,7 @@ export function DocumentSummarizer() {
     }
     setIsSaving(true);
     try {
-      await addMaterial(user.uid, {
+      await addMaterial(user.id, {
         title: documentTitle,
         summary: summary.summary,
         flashcards: flashcards,

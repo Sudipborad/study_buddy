@@ -36,7 +36,7 @@ function DashboardNav() {
         <div className="flex items-center gap-2">
           <Logo className="size-7 text-primary" />
           <h1 className="font-headline text-2xl font-semibold tracking-tighter">
-            Study Smarter
+            StudyBuddy
           </h1>
         </div>
       </SidebarHeader>

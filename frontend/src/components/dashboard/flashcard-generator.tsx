@@ -102,7 +102,7 @@ export function FlashcardGenerator() {
     }
     setIsSaving(true);
     try {
-      await addMaterial(user.uid, {
+      await addMaterial(user.id, {
         title: documentTitle,
         summary: summary?.summary || "Flashcard study set without summary",
         flashcards: flashcards,

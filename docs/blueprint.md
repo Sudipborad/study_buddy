@@ -1,4 +1,4 @@
-# **App Name**: Study Smarter
+# **App Name**: StudyBuddy
 
 ## Core Features:
 

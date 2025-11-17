@@ -1,18 +1,28 @@
+"use client";
 
-'use client';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { apiClient } from "@/lib/api";
+import { Loader2 } from "lucide-react";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
-import { Loader2 } from 'lucide-react';
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+}
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signUp: (email: string, pass: string) => Promise<any>;
-  signIn: (email: string, pass: string) => Promise<any>;
-  signInWithGoogle: () => Promise<any>;
-  logOut: () => Promise<any>;
+  signUp: (email: string, password: string, name: string) => Promise<any>;
+  signIn: (email: string, password: string) => Promise<any>;
+  logOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -20,8 +30,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signUp: async () => {},
   signIn: async () => {},
-  signInWithGoogle: async () => {},
-  logOut: async () => {},
+  logOut: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -29,47 +38,67 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (token) {
+          apiClient.setToken(token);
+          const response = await apiClient.getCurrentUser();
+          setUser(response.data.user);
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        apiClient.logout();
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => unsubscribe();
+    checkAuth();
   }, []);
 
-  const signUp = (email: string, pass: string) => {
-    return createUserWithEmailAndPassword(auth, email, pass);
+  const signUp = async (email: string, password: string, name: string) => {
+    try {
+      const response = await apiClient.register(email, password, name);
+      setUser(response.data.user);
+      return response;
+    } catch (error) {
+      throw error;
+    }
   };
-  
-  const signIn = (email: string, pass: string) => {
-      return signInWithEmailAndPassword(auth, email, pass);
-  }
 
-  const signInWithGoogle = () => {
-    const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
+  const signIn = async (email: string, password: string) => {
+    try {
+      const response = await apiClient.login(email, password);
+      setUser(response.data.user);
+      return response;
+    } catch (error) {
+      throw error;
+    }
   };
 
   const logOut = () => {
-    return signOut(auth);
-  }
+    apiClient.logout();
+    setUser(null);
+  };
 
   const value = {
     user,
     loading,
     signUp,
     signIn,
-    signInWithGoogle,
-    logOut
+    logOut,
   };
 
   return (
     <AuthContext.Provider value={value}>
       {loading ? (
         <div className="flex h-screen w-full items-center justify-center">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
-      ) : children }
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 };
