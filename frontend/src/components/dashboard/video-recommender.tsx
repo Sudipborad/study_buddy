@@ -89,6 +89,17 @@ export function VideoRecommender() {
 
   return (
     <div className="space-y-8">
+      {/* Debug info */}
+      <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
+        Debug: Study material loaded: {studyMaterial ? "Yes" : "No"} | Videos
+        found: {videos.length} | Loading: {isLoading ? "Yes" : "No"}
+        {studyMaterial && (
+          <div className="mt-1">
+            Content preview: {studyMaterial.substring(0, 100)}...
+          </div>
+        )}
+      </div>
+
       {isLoading && (
         <div className="text-center p-10">
           <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
@@ -211,21 +222,25 @@ export function VideoRecommender() {
             </div>
           </div>
           <h3 className="text-xl font-semibold font-headline">
-            Video Recommendations Will Appear Here
+            {studyMaterial
+              ? "No Videos Found"
+              : "Video Recommendations Will Appear Here"}
           </h3>
           <p className="text-muted-foreground mt-2">
             {studyMaterial
-              ? "Generating video recommendations from your uploaded material..."
+              ? "Could not find videos for your material. This might be due to API issues or network problems."
               : "Upload study material to get personalized video recommendations."}
           </p>
-          {studyMaterial && (
-            <div className="mt-4">
-              <Button onClick={handleRecommend} variant="outline">
-                <Wand2 className="mr-2 h-4 w-4" />
-                Try Getting Videos
-              </Button>
-            </div>
-          )}
+          <div className="mt-4">
+            <Button
+              onClick={handleRecommend}
+              variant="outline"
+              disabled={!studyMaterial}
+            >
+              <Wand2 className="mr-2 h-4 w-4" />
+              {studyMaterial ? "Try Again" : "Upload Material First"}
+            </Button>
+          </div>
         </Card>
       )}
     </div>

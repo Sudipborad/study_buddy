@@ -27,24 +27,3 @@ export interface ChatMessage {
     role: 'user' | 'assistant';
     content: string;
 }
-
-export interface CvData {
-    fullName: string;
-    email: string;
-    phoneNumber: string;
-    address: string;
-    personalStatement: string;
-    experience: {
-        jobTitle: string;
-        company: string;
-        startDate: string;
-        endDate: string;
-        responsibilities: string;
-    }[];
-    education: {
-        degree: string;
-        institution: string;
-        graduationDate: string;
-    }[];
-    skills: string[];
-}

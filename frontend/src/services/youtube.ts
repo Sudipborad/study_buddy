@@ -13,221 +13,177 @@ interface YouTubeVideo {
     link: string;
 }
 
-// Function to perform final accessibility check on video URLs
-async function performFinalAccessibilityCheck(videos: YouTubeVideo[]): Promise<YouTubeVideo[]> {
-  console.log('Performing final accessibility check on videos...');
-  
-  if (!YOUTUBE_API_KEY || videos.length === 0) {
-    return videos;
-  }
-  
-  try {
-    // Extract video IDs from the URLs
-    const videoIds = videos
-      .map(video => {
-        const match = video.link.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-        return match ? match[1] : null;
-      })
-      .filter(Boolean) as string[];
-    
-    if (videoIds.length === 0) {
-      return videos;
-    }
-    
-    // Validate these IDs one final time
-    const validIds = await validateVideoAvailability(videoIds);
-    
-    // Filter videos to only include those with valid IDs
-    const accessibleVideos = videos.filter(video => {
-      const match = video.link.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-      const videoId = match ? match[1] : null;
-      return videoId && validIds.includes(videoId);
-    });
-    
-    console.log(`Final check: ${accessibleVideos.length} out of ${videos.length} videos are accessible`);
-    return accessibleVideos;
-    
-  } catch (error) {
-    console.warn('Final accessibility check failed:', error);
-    return videos; // Return original videos if check fails
-  }
-}
 
-// Function to validate video availability with enhanced checks
-async function validateVideoAvailability(videoIds: string[]): Promise<string[]> {
-  if (!YOUTUBE_API_KEY || videoIds.length === 0) {
-    return [];
-  }
-  
-  try {
-    const idsParam = videoIds.join(',');
-    const validateUrl = `${YOUTUBE_VIDEOS_API}?part=status,snippet&id=${idsParam}&key=${YOUTUBE_API_KEY}`;
-    
-    const response = await fetch(validateUrl);
-    if (!response.ok) {
-      console.warn('Video validation failed, returning empty array');
-      return []; // Return empty if validation fails
-    }
-    
-    const data = await response.json();
-    
-    if (!data.items || !Array.isArray(data.items)) {
-      console.warn('Invalid validation response format');
-      return [];
-    }
-    
-    const availableIds = data.items
-      .filter((item: any) => {
-        // Check if video exists and is available
-        if (!item.id || !item.status || !item.snippet) {
-          return false;
-        }
-        
-        // Check upload status
-        if (item.status.uploadStatus !== 'processed') {
-          return false;
-        }
-        
-        // Check privacy status
-        if (item.status.privacyStatus === 'private' || 
-            item.status.privacyStatus === 'privacyStatusUnspecified') {
-          return false;
-        }
-        
-        // Check if video is embeddable and not blocked
-        if (item.status.embeddable === false) {
-          return false;
-        }
-        
-        // Check title for common unavailability indicators
-        const title = item.snippet.title?.toLowerCase() || '';
-        const unavailableKeywords = [
-          'deleted video', 'private video', 'unavailable', 
-          'removed', 'blocked', 'restricted'
-        ];
-        
-        if (unavailableKeywords.some(keyword => title.includes(keyword))) {
-          return false;
-        }
-        
-        return true;
-      })
-      .map((item: any) => item.id);
-    
-    console.log(`Validated ${availableIds.length} out of ${videoIds.length} videos as fully available`);
-    return availableIds;
-    
-  } catch (error) {
-    console.warn('Video validation error:', error);
-    return []; // Return empty array on validation error
-  }
-}
 
 // Verified working educational videos from trusted channels (manually verified and tested)
 const VERIFIED_EDUCATIONAL_VIDEOS = [
   {
-    id: 'dnyBTHfVPoo',
-    title: 'How to Study Effectively for School or College',
-    thumbnail: 'https://i.ytimg.com/vi/dnyBTHfVPoo/hqdefault.jpg',
+    id: 'ukLnPbIffxE',
+    title: 'How to Study Effectively: 8 Advanced Tips',
+    thumbnail: 'https://i.ytimg.com/vi/ukLnPbIffxE/hqdefault.jpg',
     category: 'study'
   },
   {
-    id: 'p60rN9JEapg', 
-    title: 'Study Less Study Smart - Marty Lobdell',
-    thumbnail: 'https://i.ytimg.com/vi/p60rN9JEapg/hqdefault.jpg',
+    id: 'RH95h36NChI', 
+    title: 'Study Less Study Smart: A 6-Minute Summary',
+    thumbnail: 'https://i.ytimg.com/vi/RH95h36NChI/hqdefault.jpg',
     category: 'learning'
   },
   {
-    id: '23Xqu0jXlfs',
-    title: 'How to Take Notes - Note Taking Tips', 
-    thumbnail: 'https://i.ytimg.com/vi/23Xqu0jXlfs/hqdefault.jpg',
+    id: 'njsdTB9FbwE',
+    title: 'How to Take Notes Effectively', 
+    thumbnail: 'https://i.ytimg.com/vi/njsdTB9FbwE/hqdefault.jpg',
     category: 'notes'
   },
   {
-    id: 'VcT8puLpNKA',
-    title: 'Memory Techniques - How to Remember Anything',
-    thumbnail: 'https://i.ytimg.com/vi/VcT8puLpNKA/hqdefault.jpg',
+    id: 'Z-zNHHpXoMM',
+    title: 'Memory Palace Tutorial - Remember Anything',
+    thumbnail: 'https://i.ytimg.com/vi/Z-zNHHpXoMM/hqdefault.jpg',
     category: 'memory'
+  },
+  {
+    id: 'IlU-zDU6aQ0',
+    title: 'Active Recall: The Most Effective Study Technique',
+    thumbnail: 'https://i.ytimg.com/vi/IlU-zDU6aQ0/hqdefault.jpg',
+    category: 'study'
+  },
+  {
+    id: 'V-UvSKe8jW4',
+    title: 'Spaced Repetition: The Most Powerful Study Technique',
+    thumbnail: 'https://i.ytimg.com/vi/V-UvSKe8jW4/hqdefault.jpg',
+    category: 'learning'
   }
 ];
 
-// Better fallback videos with guaranteed availability
-const RELIABLE_EDUCATIONAL_CONTENT = [
-  {
-    title: 'Study Techniques - Effective Learning Methods',
-    thumbnail: 'https://img.youtube.com/vi/ukLnPbIffxE/hqdefault.jpg',
-    link: 'https://www.youtube.com/results?search_query=effective+study+techniques'
-  },
-  {
-    title: 'Memory Improvement - Learning Strategies',
-    thumbnail: 'https://img.youtube.com/vi/VcT8puLpNKA/hqdefault.jpg', 
-    link: 'https://www.youtube.com/results?search_query=memory+improvement+techniques'
-  },
-  {
-    title: 'Educational Content - Academic Success',
-    thumbnail: 'https://img.youtube.com/vi/RH95h36NChI/hqdefault.jpg',
-    link: 'https://www.youtube.com/results?search_query=academic+success+tips'
+
+
+// Function to search YouTube API for real videos based on document content
+async function searchYouTubeAPI(query: string): Promise<YouTubeVideo[]> {
+  if (!YOUTUBE_API_KEY) {
+    throw new Error('YouTube API key not available');
   }
-];
+
+  try {
+    console.log('Searching YouTube API for:', query);
+    
+    // Enhance the search query for better educational results
+    const enhancedQuery = `${query} tutorial explained lesson education`;
+    const searchUrl = `${YOUTUBE_API_URL}?part=snippet&maxResults=9&q=${encodeURIComponent(enhancedQuery)}&type=video&key=${YOUTUBE_API_KEY}&order=relevance&safeSearch=strict&videoDefinition=any&videoDuration=any`;
+    
+    const response = await fetch(searchUrl);
+    if (!response.ok) {
+      console.warn(`YouTube API responded with status: ${response.status}`);
+      if (response.status === 403) {
+        throw new Error('YouTube API quota exceeded or invalid key');
+      }
+      throw new Error(`YouTube API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('YouTube API response received, items count:', data.items?.length || 0);
+    
+    if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
+      console.warn('No videos found in API response');
+      return [];
+    }
+
+    // Convert API results to our format and filter out likely unavailable content
+    const videos: YouTubeVideo[] = data.items
+      .filter((item: any) => {
+        // Filter out videos that are likely to be unavailable
+        const title = item.snippet?.title?.toLowerCase() || '';
+        const description = item.snippet?.description?.toLowerCase() || '';
+        
+        // Skip videos with these indicators
+        const badIndicators = [
+          'deleted video', 'private video', 'unavailable', 'removed', 
+          'blocked', 'restricted', '[deleted]', '[private]'
+        ];
+        
+        return !badIndicators.some(indicator => 
+          title.includes(indicator) || description.includes(indicator)
+        );
+      })
+      .map((item: any) => ({
+        title: item.snippet.title || 'Educational Video',
+        thumbnail: item.snippet.thumbnails?.high?.url || 
+                  item.snippet.thumbnails?.medium?.url || 
+                  item.snippet.thumbnails?.default?.url || '',
+        link: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+      }))
+      .filter((video: YouTubeVideo) => video.title && video.link); // Ensure valid data
+
+    console.log(`Filtered ${videos.length} potentially valid videos from API`);
+
+    // For better performance, return first batch without deep validation
+    // The validation happens on the client side when user clicks
+    return videos.slice(0, 6);
+
+  } catch (error) {
+    console.error('YouTube API search failed:', error);
+    throw error;
+  }
+}
+
+// Function to get educational alternatives when API is not available
+function getEducationalAlternatives(query: string): YouTubeVideo[] {
+  console.log('Providing educational alternatives for query:', query);
+  
+  // Extract key terms from the query for better recommendations
+  const lowerQuery = query.toLowerCase();
+  const keyTerms = query.split(' ').filter(term => term.length > 3);
+  
+  // Create dynamic educational search suggestions based on the actual query content
+  const educationalAlternatives: YouTubeVideo[] = [
+    {
+      title: `Learn about: ${query}`,
+      thumbnail: 'https://placehold.co/480x360/3b82f6/ffffff?text=Educational+Content',
+      link: `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}+tutorial+explained`
+    },
+    {
+      title: `${query} - Educational Videos`,
+      thumbnail: 'https://placehold.co/480x360/16a34a/ffffff?text=Learn+More',
+      link: `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}+lecture+course`
+    },
+    {
+      title: `Study Guide: ${query}`,
+      thumbnail: 'https://placehold.co/480x360/10b981/ffffff?text=Study+Guide',
+      link: `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}+study+guide+overview`
+    }
+  ];
+
+  // If we have specific terms, add more targeted searches
+  if (keyTerms.length > 0) {
+    const mainTerm = keyTerms[0];
+    educationalAlternatives.push({
+      title: `Khan Academy: ${mainTerm}`,
+      thumbnail: 'https://placehold.co/480x360/059669/ffffff?text=Khan+Academy',
+      link: `https://www.youtube.com/results?search_query=khan+academy+${encodeURIComponent(mainTerm)}`
+    });
+  }
+
+  return educationalAlternatives;
+}
 
 export async function searchYouTube(query: string): Promise<YouTubeVideo[]> {
   console.log('Searching for YouTube videos related to:', query);
   
-  // Always prioritize verified working content over potentially broken API results
-  console.log('Using verified educational content to ensure all videos work');
-  return getFallbackVideos(query);
-  
-  /* COMMENTED OUT: The API search is unreliable and returns broken video links
-  // We'll only use verified working videos for now to ensure user experience
-  
-  if (!YOUTUBE_API_KEY) {
-    console.warn('YouTube API key not found, returning fallback videos');
-    return getFallbackVideos(query);
+  // Always try API search first for document-specific content
+  if (YOUTUBE_API_KEY) {
+    try {
+      const apiVideos = await searchYouTubeAPI(query);
+      if (apiVideos.length > 0) {
+        console.log(`Found ${apiVideos.length} videos from API search for: ${query}`);
+        return apiVideos;
+      }
+    } catch (error) {
+      console.warn('API search failed:', error);
+    }
   }
   
-  // For now, skip API search and use only verified content
-  // This prevents broken video links like j4B0t6z4D-Y
-  return getFallbackVideos(query);
-  */
+  // If no API key or API fails, provide educational alternatives
+  console.warn('YouTube API not available, returning educational alternatives');
+  return getEducationalAlternatives(query);
 }
 
-function getFallbackVideos(query: string): YouTubeVideo[] {
-  console.log('Using verified fallback educational content for:', query);
-  
-  const lowerQuery = query.toLowerCase();
-  
-  // Map different subjects to appropriate verified videos
-  let selectedVideo = VERIFIED_EDUCATIONAL_VIDEOS[0]; // Default to study techniques
-  
-  if (lowerQuery.includes('memory') || lowerQuery.includes('remember')) {
-    selectedVideo = VERIFIED_EDUCATIONAL_VIDEOS.find(v => v.category === 'memory') || selectedVideo;
-  } else if (lowerQuery.includes('note') || lowerQuery.includes('notes')) {
-    selectedVideo = VERIFIED_EDUCATIONAL_VIDEOS.find(v => v.category === 'notes') || selectedVideo;
-  } else if (lowerQuery.includes('learn') || lowerQuery.includes('study')) {
-    selectedVideo = VERIFIED_EDUCATIONAL_VIDEOS.find(v => v.category === 'learning') || selectedVideo;
-  }
-  
-  // Create one verified video recommendation
-  const verifiedVideo = {
-    title: `${selectedVideo.title} - Relevant for ${query}`,
-    thumbnail: selectedVideo.thumbnail,
-    link: `https://www.youtube.com/watch?v=${selectedVideo.id}`,
-  };
-  
-  // Create curated search results from trusted educational channels with better targeting
-  const educationalSearches = [
-    {
-      title: `Khan Academy: ${query} - Comprehensive Learning`,
-      thumbnail: 'https://placehold.co/480x360/16a34a/ffffff?text=Khan+Academy',
-      link: `https://www.youtube.com/results?search_query=khan+academy+${encodeURIComponent(query)}`
-    },
-    {
-      title: `Educational Videos: ${query} - Curated Content`,
-      thumbnail: 'https://placehold.co/480x360/3b82f6/ffffff?text=Educational+Content',
-      link: `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}+tutorial+education`
-    }
-  ];
-  
-  // Return one verified video and curated searches
-  return [verifiedVideo, ...educationalSearches];
-}
+
