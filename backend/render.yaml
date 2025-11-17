@@ -1,0 +1,12 @@
+# Render.com configuration for StudyBuddy Backend
+# This file tells Render how to build and run your Express.js backend
+
+# Build settings
+buildCommand: npm install && npm run build
+startCommand: npm start
+
+# Environment
+node: 18
+
+# Health check
+healthCheckPath: /api/health

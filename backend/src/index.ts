@@ -17,7 +17,7 @@ import userRoutes from './routes/users';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 10000; // Render uses port 10000, Railway uses 8080
 
 // Connect to database
 connectDB();
