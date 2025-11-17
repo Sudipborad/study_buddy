@@ -8,6 +8,15 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    serverComponentsExternalPackages: ['pdf-parse'],
+  },
+  // Increase body size limit for file uploads
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+  },
   images: {
     remotePatterns: [
       {

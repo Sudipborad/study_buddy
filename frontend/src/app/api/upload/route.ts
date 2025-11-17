@@ -3,6 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import mammoth from 'mammoth';
 import pdf from 'pdf-parse/lib/pdf-parse';
 
+// Configure the route to handle larger files
+export const runtime = 'nodejs';
+export const maxDuration = 30; // 30 seconds timeout
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -10,6 +14,11 @@ export async function POST(req: NextRequest) {
 
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded.' }, { status: 400 });
+    }
+
+    // Check file size (25MB limit)
+    if (file.size > 25 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File too large. Please upload a file smaller than 25MB.' }, { status: 413 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
