@@ -17,6 +17,31 @@ import { useToast } from "@/hooks/use-toast";
 import { StudyMaterialContext } from "@/contexts/study-material-context";
 import { Label } from "@/components/ui/label";
 
+// Import client-side PDF parsing
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
+
+// Configure PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+
+// Client-side PDF processing function
+async function processPDFClientSide(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = '';
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .filter((item: any) => item.str)
+      .map((item: any) => item.str)
+      .join(' ');
+    fullText += pageText + ' ';
+  }
+
+  return fullText.trim();
+}
+
 export function Uploader() {
   const [isUploading, setIsUploading] = useState(false);
   const [fileContent, setFileContent] = useState<string | null>(null);
@@ -73,23 +98,36 @@ export function Uploader() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("file", file);
+    let text = '';
 
     try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      // Process file client-side to avoid server limits
+      if (file.type === 'text/plain') {
+        text = await file.text();
+      } else if (file.type === 'application/pdf') {
+        text = await processPDFClientSide(file);
+      } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.type === 'application/msword') {
+        // For Word docs, we still need server processing for now
+        const formData = new FormData();
+        formData.append("file", file);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "File processing failed.");
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "File processing failed.");
+        }
+
+        const data = await response.json();
+        text = data.text;
+      } else {
+        throw new Error('Unsupported file type. Please upload a PDF, DOCX, or TXT file.');
       }
 
-      const data = await response.json();
-
-      if (!data.text || data.text.trim().length < 100) {
+      if (!text || text.trim().length < 100) {
         toast({
           variant: "destructive",
           title: "Not a valid document",
@@ -101,7 +139,7 @@ export function Uploader() {
         return;
       }
 
-      const truncatedText = data.text.slice(0, 10000);
+      const truncatedText = text.slice(0, 10000);
       setFileContent(truncatedText);
       setFileName(file.name);
       setStudyMaterial(truncatedText);

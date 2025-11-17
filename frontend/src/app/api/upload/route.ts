@@ -16,27 +16,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file uploaded.' }, { status: 400 });
     }
 
-    // Check file size (25MB limit)
-    if (file.size > 25 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File too large. Please upload a file smaller than 25MB.' }, { status: 413 });
+    // Only handle Word documents server-side now
+    if (file.type !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' && 
+        file.type !== 'application/msword') {
+      return NextResponse.json({ error: 'This endpoint only processes Word documents.' }, { status: 400 });
+    }
+
+    // Smaller size limit for Word docs to avoid 413 errors
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: 'Word document too large. Please upload a file smaller than 10MB.' }, { status: 413 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    let text = '';
-
-    if (file.type === 'text/plain') {
-      text = buffer.toString('utf-8');
-    } else if (file.type === 'application/pdf') {
-      const data = await pdf(buffer);
-      text = data.text;
-    } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.type === 'application/msword') {
-      const result = await mammoth.extractRawText({ buffer });
-      text = result.value;
-    } else {
-      return NextResponse.json({ error: 'Unsupported file type. Please upload a PDF, DOCX, or TXT file.' }, { status: 400 });
-    }
-
-    return NextResponse.json({ text });
+    const result = await mammoth.extractRawText({ buffer });
+    
+    return NextResponse.json({ text: result.value });
     
   } catch (error) {
     console.error('Error processing file:', error);
