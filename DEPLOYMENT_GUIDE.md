@@ -55,7 +55,7 @@
 3. Set Root Directory to `frontend`
 4. Set these environment variables in Vercel:
    ```
-   NEXT_PUBLIC_API_URL=https://studybuddy-backend.onrender.com/api
+   NEXT_PUBLIC_API_URL=https://studybuddy-backend-nhc6.onrender.com/api
    NEXT_PUBLIC_YOUTUBE_API_KEY=AIzaSyAW_g1QRaVudyUMVa_ADlj75hUx1kfKFNQ
    GEMINI_API_KEY=AIzaSyBH1uN_vHBEE5MrK1ErXQTWnZhE8gwjgos
    ```

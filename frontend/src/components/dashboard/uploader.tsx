@@ -46,12 +46,12 @@ export function Uploader() {
     setFlashcards([]);
     setIsSaved(false);
 
-    if (file.size > 5 * 1024 * 1024) {
-      // 5MB limit
+    if (file.size > 25 * 1024 * 1024) {
+      // 25MB limit
       toast({
         variant: "destructive",
         title: "File too large",
-        description: "Please upload a file smaller than 5MB.",
+        description: "Please upload a file smaller than 25MB.",
       });
       setIsUploading(false);
       return;
@@ -139,7 +139,7 @@ export function Uploader() {
               Click to upload or drag and drop
             </h3>
             <p className="text-sm text-muted-foreground">
-              PDF, DOCX or TXT (up to 5MB)
+              PDF, DOCX or TXT (up to 25MB)
             </p>
             <Input
               type="file"
