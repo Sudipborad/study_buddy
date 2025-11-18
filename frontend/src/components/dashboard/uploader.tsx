@@ -20,8 +20,8 @@ import { Label } from "@/components/ui/label";
 // Import client-side PDF parsing
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
 
-// Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.394/pdf.worker.min.js`;
+// Configure PDF.js worker - use jsdelivr CDN which has the correct version
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.394/build/pdf.worker.min.js`;
 
 // Optimized client-side PDF processing function
 async function processPDFClientSide(file: File): Promise<string> {
