@@ -1,63 +1,108 @@
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow for chatting with a document.
+ * @fileOverview This file defines a flow for chatting with a document using OpenAI/GPT.
  *
  * - chatWithDocument - A function that takes a document and a question and returns an answer.
  * - ChatWithDocumentInput - The input type for the chatWithDocument function.
  * - ChatWithDocumentOutput - The return type for the chatWithDocument function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { callOpenAIChat } from '@/ai/chat-genkit';
 
-const ChatWithDocumentInputSchema = z.object({
-  documentText: z
-    .string()
-    .describe("The text of the document to chat with."),
-  question: z
-    .string()
-    .describe("The user's question about the document."),
-});
-export type ChatWithDocumentInput = z.infer<typeof ChatWithDocumentInputSchema>;
-
-const ChatWithDocumentOutputSchema = z.object({
-  answer: z.string().describe("The generated answer to the question based on the document."),
-});
-export type ChatWithDocumentOutput = z.infer<typeof ChatWithDocumentOutputSchema>;
-
-export async function chatWithDocument(input: ChatWithDocumentInput): Promise<ChatWithDocumentOutput> {
-  return chatWithDocumentFlow(input);
+export interface ChatWithDocumentInput {
+  documentText: string;
+  question: string;
 }
 
-const prompt = ai.definePrompt({
-  name: 'chatWithDocumentPrompt',
-  input: {schema: ChatWithDocumentInputSchema},
-  output: {schema: ChatWithDocumentOutputSchema},
-  prompt: `You are a helpful and friendly AI assistant, like ChatGPT or Gemini. Your primary goal is to answer questions about the provided document.
+export interface ChatWithDocumentOutput {
+  answer: string;
+}
 
-When answering, you should first rely on the information within the document. However, you can and should use your general knowledge to elaborate, provide context, or answer questions that the document might only touch upon briefly. Your answers should be conversational and helpful.
+export async function chatWithDocument(input: ChatWithDocumentInput): Promise<ChatWithDocumentOutput> {
+  console.log('chatWithDocument called with input:', { 
+    documentLength: input.documentText?.length || 0, 
+    question: input.question 
+  });
 
-Please format your response clearly. Use paragraphs to separate distinct points.
+  const { documentText, question } = input;
 
-Document Text:
-{{{documentText}}}
-
-Question:
-{{{question}}}
-
-Based on the document and your general knowledge, what is the answer?
-`,
-});
-
-const chatWithDocumentFlow = ai.defineFlow(
-  {
-    name: 'chatWithDocumentFlow',
-    inputSchema: ChatWithDocumentInputSchema,
-    outputSchema: ChatWithDocumentOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  // Validate inputs
+  if (!documentText || !question) {
+    throw new Error('Both document text and question are required');
   }
-);
+
+  // Truncate document if too long to avoid token limits
+  const maxDocLength = 3000;
+  const truncatedDoc = documentText.length > maxDocLength 
+    ? documentText.substring(0, maxDocLength) + '...\n[Document truncated for chat processing]'
+    : documentText;
+
+  // Create the chat messages for OpenAI API
+  const messages = [
+    {
+      role: 'system',
+      content: `You are a helpful AI assistant that provides clear, concise answers in pointwise format.
+
+STRICT FORMATTING REQUIREMENTS:
+- ALWAYS respond in bullet points or numbered lists
+- Keep each point short and concise (1-2 sentences max)
+- Use markdown formatting: **bold** for key terms, *italics* for emphasis
+- Structure with main points and sub-points when needed
+- Never write long paragraphs - break everything into points
+- Use proper headings with ## for main topics
+
+RESPONSE FORMAT EXAMPLE:
+## Main Topic
+1. **Key Point 1** - Brief explanation
+2. **Key Point 2** - Brief explanation
+   - Sub-point with details
+   - Another relevant sub-point
+3. **Key Point 3** - Brief explanation
+
+CONTENT GUIDELINES:
+- Base answers primarily on the document content below
+- Add general knowledge only when helpful for context
+- If document lacks info, clearly state this in points
+- Keep language clear and academic
+
+Document Content:
+${truncatedDoc}`
+    },
+    {
+      role: 'user',
+      content: `Please answer this question about the document in clear pointwise format with bullet points or numbered lists:
+
+${question}
+
+Remember to format your response with:
+- Clear bullet points or numbered lists
+- **Bold** key terms
+- Short, concise points
+- Proper structure with headings if needed`
+    }
+  ];
+
+  try {
+    console.log('Calling OpenAI API...');
+    const answer = await callOpenAIChat(messages);
+    
+    if (!answer) {
+      throw new Error('Received empty response from AI');
+    }
+
+    console.log('Successfully got response from OpenAI');
+    return { answer };
+  } catch (error) {
+    console.error('Error in chatWithDocument:', error);
+    
+    // Provide a fallback response instead of throwing
+    const fallbackAnswer = `I apologize, but I'm having trouble processing your question about the document right now. 
+
+Error: ${error instanceof Error ? error.message : 'Unknown error'}
+
+Please try rephrasing your question or check if the document was uploaded correctly.`;
+    
+    return { answer: fallbackAnswer };
+  }
+}
