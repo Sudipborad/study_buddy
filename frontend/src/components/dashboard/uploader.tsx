@@ -17,55 +17,6 @@ import { useToast } from "@/hooks/use-toast";
 import { StudyMaterialContext } from "@/contexts/study-material-context";
 import { Label } from "@/components/ui/label";
 
-// Import client-side PDF parsing
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
-
-// Configure PDF.js worker - use jsdelivr CDN which has the correct version
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.394/build/pdf.worker.min.js`;
-
-// Optimized client-side PDF processing function
-async function processPDFClientSide(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-
-  const pdf = await pdfjsLib.getDocument({
-    data: arrayBuffer,
-    // Optimize for speed
-    disableFontFace: true,
-    disableAutoFetch: true,
-    disableStream: true,
-  }).promise;
-
-  let fullText = "";
-  const maxPages = Math.min(pdf.numPages, 50); // Limit to 50 pages for performance
-
-  // Process pages in batches of 5 for better performance
-  for (let i = 1; i <= maxPages; i += 5) {
-    const batchPromises = [];
-    const batchEnd = Math.min(i + 4, maxPages);
-
-    for (let j = i; j <= batchEnd; j++) {
-      batchPromises.push(
-        pdf.getPage(j).then(async (page) => {
-          const textContent = await page.getTextContent();
-          return textContent.items
-            .filter((item: any) => item.str && item.str.trim())
-            .map((item: any) => item.str)
-            .join(" ");
-        })
-      );
-    }
-
-    const batchResults = await Promise.all(batchPromises);
-    fullText += batchResults.join(" ") + " ";
-  }
-
-  if (pdf.numPages > 50) {
-    fullText += `\n\n[Note: Only first 50 pages processed for performance. Total pages: ${pdf.numPages}]`;
-  }
-
-  return fullText.trim();
-}
-
 export function Uploader() {
   const [isUploading, setIsUploading] = useState(false);
   const [fileContent, setFileContent] = useState<string | null>(null);
@@ -95,12 +46,12 @@ export function Uploader() {
     setFlashcards([]);
     setIsSaved(false);
 
-    if (file.size > 25 * 1024 * 1024) {
-      // 25MB limit
+    if (file.size > 5 * 1024 * 1024) {
+      // 5MB limit
       toast({
         variant: "destructive",
         title: "File too large",
-        description: "Please upload a file smaller than 25MB.",
+        description: "Please upload a file smaller than 5MB.",
       });
       setIsUploading(false);
       return;
@@ -122,42 +73,23 @@ export function Uploader() {
       return;
     }
 
-    let text = "";
+    const formData = new FormData();
+    formData.append("file", file);
 
     try {
-      // Process file client-side to avoid server limits
-      if (file.type === "text/plain") {
-        text = await file.text();
-      } else if (file.type === "application/pdf") {
-        text = await processPDFClientSide(file);
-      } else if (
-        file.type ===
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-        file.type === "application/msword"
-      ) {
-        // For Word docs, we still need server processing for now
-        const formData = new FormData();
-        formData.append("file", file);
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "File processing failed.");
-        }
-
-        const data = await response.json();
-        text = data.text;
-      } else {
-        throw new Error(
-          "Unsupported file type. Please upload a PDF, DOCX, or TXT file."
-        );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "File processing failed.");
       }
 
-      if (!text || text.trim().length < 100) {
+      const data = await response.json();
+
+      if (!data.text || data.text.trim().length < 100) {
         toast({
           variant: "destructive",
           title: "Not a valid document",
@@ -169,8 +101,7 @@ export function Uploader() {
         return;
       }
 
-      // Optimize text length for faster AI processing
-      const truncatedText = text.slice(0, 8000); // Reduced from 10000 for faster processing
+      const truncatedText = data.text.slice(0, 10000);
       setFileContent(truncatedText);
       setFileName(file.name);
       setStudyMaterial(truncatedText);
@@ -208,7 +139,7 @@ export function Uploader() {
               Click to upload or drag and drop
             </h3>
             <p className="text-sm text-muted-foreground">
-              PDF, DOCX or TXT (up to 25MB)
+              PDF, DOCX or TXT (up to 5MB)
             </p>
             <Input
               type="file"
@@ -223,7 +154,7 @@ export function Uploader() {
                 {isUploading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing file...
+                    Processing...
                   </>
                 ) : (
                   "Select File"

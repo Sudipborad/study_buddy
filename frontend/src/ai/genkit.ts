@@ -7,9 +7,6 @@ if (!process.env.GEMINI_API_KEY) {
 
 
 export const ai = genkit({
-  plugins: [googleAI({
-    apiKey: process.env.GEMINI_API_KEY,
-  })],
-  // Use faster model for better performance
-  model: 'googleai/gemini-1.5-flash', 
+  plugins: [googleAI()],
+  model: 'googleai/gemini-2.0-flash', // This `model` key is not a valid property for genkit({})
 });
