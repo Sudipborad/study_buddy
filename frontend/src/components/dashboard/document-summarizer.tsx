@@ -69,34 +69,45 @@ export function DocumentSummarizer() {
     setFlashcards([]);
     setIsSaved(false);
     try {
-      const summaryResult = await summarizeDocument({ documentText: material });
-      if (summaryResult.summary) {
-        setSummary(summaryResult);
+      // Run summary and flashcards in parallel for better performance
+      const [summaryResult, flashcardResult] = await Promise.allSettled([
+        summarizeDocument({ documentText: material }),
+        generateFlashcards({ studyMaterial: material })
+      ]);
+
+      // Handle summary result
+      if (summaryResult.status === 'fulfilled' && summaryResult.value.summary) {
+        setSummary(summaryResult.value);
         toast({
           title: "Success!",
           description: "Generated document summary.",
         });
-
-        // Now generate flashcards in the background
-        const flashcardResult = await generateFlashcards({
-          studyMaterial: material,
-        });
-        if (
-          flashcardResult.flashcards &&
-          flashcardResult.flashcards.length > 0
-        ) {
-          setFlashcards(flashcardResult.flashcards);
-          toast({
-            title: "Flashcards Ready!",
-            description: `Generated ${flashcardResult.flashcards.length} flashcards.`,
-          });
-        }
       } else {
         toast({
           variant: "destructive",
-          title: "No summary generated.",
+          title: "Summary generation failed.",
+          description: "Could not generate summary. Please try again.",
+        });
+      }
+
+      // Handle flashcards result
+      if (flashcardResult.status === 'fulfilled' && 
+          flashcardResult.value.flashcards && 
+          flashcardResult.value.flashcards.length > 0) {
+        setFlashcards(flashcardResult.value.flashcards);
+        toast({
+          title: "Flashcards Ready!",
+          description: `Generated ${flashcardResult.value.flashcards.length} flashcards.`,
+        });
+      }
+
+      // If both failed, show error
+      if (summaryResult.status === 'rejected' && flashcardResult.status === 'rejected') {
+        toast({
+          variant: "destructive",
+          title: "AI processing failed.",
           description:
-            "The AI could not generate a summary from the provided material. Please try again with different text.",
+            "Both summary and flashcard generation failed. Please try again.",
         });
       }
     } catch (error) {
