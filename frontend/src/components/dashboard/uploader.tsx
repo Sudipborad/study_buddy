@@ -26,15 +26,15 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.j
 // Optimized client-side PDF processing function
 async function processPDFClientSide(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
-  
-  const pdf = await pdfjsLib.getDocument({ 
+
+  const pdf = await pdfjsLib.getDocument({
     data: arrayBuffer,
     // Optimize for speed
     disableFontFace: true,
     disableAutoFetch: true,
-    disableStream: true
+    disableStream: true,
   }).promise;
-  
+
   let fullText = "";
   const maxPages = Math.min(pdf.numPages, 50); // Limit to 50 pages for performance
 
@@ -42,7 +42,7 @@ async function processPDFClientSide(file: File): Promise<string> {
   for (let i = 1; i <= maxPages; i += 5) {
     const batchPromises = [];
     const batchEnd = Math.min(i + 4, maxPages);
-    
+
     for (let j = i; j <= batchEnd; j++) {
       batchPromises.push(
         pdf.getPage(j).then(async (page) => {
@@ -54,7 +54,7 @@ async function processPDFClientSide(file: File): Promise<string> {
         })
       );
     }
-    
+
     const batchResults = await Promise.all(batchPromises);
     fullText += batchResults.join(" ") + " ";
   }

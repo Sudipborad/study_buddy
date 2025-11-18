@@ -72,11 +72,11 @@ export function DocumentSummarizer() {
       // Run summary and flashcards in parallel for better performance
       const [summaryResult, flashcardResult] = await Promise.allSettled([
         summarizeDocument({ documentText: material }),
-        generateFlashcards({ studyMaterial: material })
+        generateFlashcards({ studyMaterial: material }),
       ]);
 
       // Handle summary result
-      if (summaryResult.status === 'fulfilled' && summaryResult.value.summary) {
+      if (summaryResult.status === "fulfilled" && summaryResult.value.summary) {
         setSummary(summaryResult.value);
         toast({
           title: "Success!",
@@ -91,9 +91,11 @@ export function DocumentSummarizer() {
       }
 
       // Handle flashcards result
-      if (flashcardResult.status === 'fulfilled' && 
-          flashcardResult.value.flashcards && 
-          flashcardResult.value.flashcards.length > 0) {
+      if (
+        flashcardResult.status === "fulfilled" &&
+        flashcardResult.value.flashcards &&
+        flashcardResult.value.flashcards.length > 0
+      ) {
         setFlashcards(flashcardResult.value.flashcards);
         toast({
           title: "Flashcards Ready!",
@@ -102,7 +104,10 @@ export function DocumentSummarizer() {
       }
 
       // If both failed, show error
-      if (summaryResult.status === 'rejected' && flashcardResult.status === 'rejected') {
+      if (
+        summaryResult.status === "rejected" &&
+        flashcardResult.status === "rejected"
+      ) {
         toast({
           variant: "destructive",
           title: "AI processing failed.",
