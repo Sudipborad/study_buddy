@@ -24,10 +24,29 @@ connectDB();
 
 // Middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}));
+// Configure CORS: in development reflect the requesting origin so
+// requests from `http://192.168.56.1:3001` or other local hostnames work.
+// In production, only allow the configured FRONTEND_URL.
+const corsOptions = {
+  origin: (origin: any, callback: any) => {
+    // Allow non-browser requests like curl/postman
+    if (!origin) return callback(null, true);
+
+    // In development accept any browser origin (reflect it)
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+
+    // In production only allow the configured FRONTEND_URL
+    const allowed = process.env.FRONTEND_URL;
+    if (allowed && origin === allowed) return callback(null, true);
+
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(compression());
 app.use(morgan('combined'));
 app.use(express.json({ limit: '5mb' }));
