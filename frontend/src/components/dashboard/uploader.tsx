@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf";
 
 // Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.394/pdf.worker.min.js`;
 
 // Optimized client-side PDF processing function
 async function processPDFClientSide(file: File): Promise<string> {
